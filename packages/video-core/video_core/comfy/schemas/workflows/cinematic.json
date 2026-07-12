@@ -1,0 +1,113 @@
+{
+  "version": 1,
+  "state": {},
+  "last_node_id": 12,
+  "last_link_id": 18,
+  "nodes": [
+    {
+      "id": 1,
+      "type": "CLIPTextEncode",
+      "pos": [50, 100],
+      "size": [400, 200],
+      "flags": {},
+      "order": 0,
+      "mode": 0,
+      "inputs": [
+        {"name": "clip", "type": "CLIP", "link": 1}
+      ],
+      "outputs": [
+        {"name": "CONDITIONING", "type": "CONDITIONING", "links": [6]}
+      ],
+      "properties": {"Node name for S&R": "CLIPTextEncode"},
+      "widgets_values": ["a beautiful sunset over mountains"],
+      "_meta": {
+        "title": "PositivePrompt"
+      }
+    },
+    {
+      "id": 2,
+      "type": "CLIPTextEncode",
+      "pos": [50, 350],
+      "size": [400, 200],
+      "flags": {},
+      "order": 1,
+      "mode": 0,
+      "inputs": [
+        {"name": "clip", "type": "CLIP", "link": 2}
+      ],
+      "outputs": [
+        {"name": "CONDITIONING", "type": "CONDITIONING", "links": [7]}
+      ],
+      "properties": {"Node name for S&R": "CLIPTextEncode"},
+      "widgets_values": ["worst quality, low quality"],
+      "_meta": {
+        "title": "NegativePrompt"
+      }
+    },
+    {
+      "id": 3,
+      "type": "KSampler",
+      "pos": [500, 200],
+      "size": [300, 150],
+      "flags": {},
+      "order": 2,
+      "mode": 0,
+      "inputs": [
+        {"name": "model", "type": "MODEL", "link": 3},
+        {"name": "positive", "type": "CONDITIONING", "link": 6},
+        {"name": "negative", "type": "CONDITIONING", "link": 7},
+        {"name": "latent_image", "type": "LATENT", "link": 8}
+      ],
+      "outputs": [
+        {"name": "LATENT", "type": "LATENT", "links": [9]}
+      ],
+      "properties": {"Node name for S&R": "KSampler"},
+      "widgets_values": [123456789, "fixed", 25, 7.5, "euler", "normal", 1.0],
+      "_meta": {
+        "title": "KSampler"
+      }
+    },
+    {
+      "id": 4,
+      "type": "EmptyLatentImage",
+      "pos": [500, 50],
+      "size": [250, 100],
+      "flags": {},
+      "order": 3,
+      "mode": 0,
+      "inputs": [],
+      "outputs": [
+        {"name": "LATENT", "type": "LATENT", "links": [8]}
+      ],
+      "properties": {"Node name for S&R": "EmptyLatentImage"},
+      "widgets_values": [1280, 720, 81],
+      "_meta": {
+        "title": "EmptyLatentImage"
+      }
+    },
+    {
+      "id": 5,
+      "type": "VHS_VideoCombine",
+      "pos": [850, 200],
+      "size": [350, 250],
+      "flags": {},
+      "order": 4,
+      "mode": 0,
+      "inputs": [
+        {"name": "images", "type": "IMAGE", "link": 10}
+      ],
+      "outputs": [
+        {"name": "FILENAME", "type": "STRING", "links": []}
+      ],
+      "properties": {"Node name for S&R": "VHS_VideoCombine"},
+      "widgets_values": [24, 1, "AnimateDiff", "final", "mp4", true, false, false],
+      "_meta": {
+        "title": "VHS_VideoCombine"
+      }
+    }
+  ],
+  "links": [],
+  "groups": [],
+  "config": {},
+  "extra": {}
+}
