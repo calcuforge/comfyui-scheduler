@@ -28,7 +28,7 @@ comfyui-cli status [--url URL]
 
 ### Run a workflow
 ```bash
-comfyui-cli run --workflow FILE [-a ASSET...] [--output-node TITLE] [--url URL] [--user U --password P]
+comfyui-cli run --workflow FILE [-i INPUTS_JSON] [--output-node TITLE]
 ```
 
 ## `run` Options
@@ -36,18 +36,30 @@ comfyui-cli run --workflow FILE [-a ASSET...] [--output-node TITLE] [--url URL] 
 | Option | Purpose |
 |--------|---------|
 | `-w, --workflow PATH` | **(required)** ComfyUI API-format JSON workflow file |
-| `-a, --asset PATH` | Upload a file before execution (repeatable) |
-| `--asset-node TITLE` | Node that receives uploaded files (default: `Load Image`) |
-| `--asset-param NAME` | Input parameter name on the asset node (default: `image`) |
+| `-i, --inputs JSON` | JSON array of input objects (default: `[]`) |
 | `--output-node TITLE` | Node to collect outputs from (default: last node) |
-| `--url URL` | Direct server URL; skips registered nodes & load balancing |
-| `--user USER` | Basic-auth user (only with `--url`) |
-| `--password PASS` | Basic-auth password (only with `--url`) |
+
+## `--inputs` Format
+
+JSON array where each object has:
+- `type`: `"string"` for text, `"file"` for upload
+- `value`: the string content or local file path
+- `node_title`: `_meta.title` of target workflow node
+- `node_field`: input parameter name on that node
+
+Example:
+```json
+[
+  {"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"},
+  {"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"}
+]
+```
 
 ## Behavior
 
-- **Without `--url`:** Auto-selects the least-busy registered node (smallest queue_running + queue_pending).
+- **Load balancing:** Auto-selects the least-busy registered node (smallest queue_running + queue_pending).
 - **Blocks until completion:** Opens a WebSocket, waits for execution to finish or error.
+- **Credentials:** Always taken from locally stored node config — register nodes before running.
 - **Output:** Prints one download URL per generated file to stdout.
 - **Errors:** Printed to stderr; exit code 0 on success, 1 on failure, 2 on usage error.
 
@@ -61,7 +73,7 @@ Standard ComfyUI API format exported from the web UI.  Nodes must have `_meta.ti
 
 ## Multi-Node Load Balancing
 
-Register multiple nodes, then run without `--url` — the tool picks the least loaded:
+Register multiple nodes — the tool picks the least loaded:
 
 ```bash
 comfyui-cli node add --url http://10.0.0.5:8188 --name node-a
@@ -73,19 +85,14 @@ comfyui-cli run -w workflow.json   # auto-picks idle node
 
 ```
 # Text-to-image
-comfyui-cli run -w t2i.json
+comfyui-cli run -w t2i.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
 
 # Image-to-image with multiple inputs
-comfyui-cli run -w img2img.json -a input.png -a mask.png
+comfyui-cli run -w img2img.json -i '[{"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"},{"type":"file","value":"./mask.png","node_title":"Load Mask","node_field":"image"}]'
 
 # Video processing
-comfyui-cli run -w vid.json -a clip.mp4 --asset-node "Load Video"
-
-# Direct node (no registration needed)
-comfyui-cli run -w wf.json --url http://127.0.0.1:8188
-
-# Authenticated node
-comfyui-cli run -w wf.json --url https://comfy.example.com --user admin --password s3cret
+comfyui-cli run -w vid.json -i '[{"type":"file","value":"./clip.mp4","node_title":"Load Video","node_field":"video"}]'
+```
 ```
 
 ## Storage

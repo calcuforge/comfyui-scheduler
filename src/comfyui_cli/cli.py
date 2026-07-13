@@ -4,8 +4,8 @@ CLI entry point — ``comfyui-cli`` command.
 
 from __future__ import annotations
 
+import json
 import sys
-from pathlib import Path
 
 import click
 
@@ -86,79 +86,62 @@ def node_clear() -> None:
     help="Path to the ComfyUI API-format workflow JSON file.",
 )
 @click.option(
-    "--asset", "-a",
-    "assets",
-    multiple=True,
-    type=click.Path(exists=True),
-    help="Asset file to upload (image/video/mask).  Repeatable.",
-)
-@click.option(
-    "--asset-node",
-    default="Load Image",
-    show_default=True,
-    help="_meta.title of the node that receives uploaded assets.",
-)
-@click.option(
-    "--asset-param",
-    default="image",
-    show_default=True,
-    help="Input parameter name on the asset node for uploaded files.",
+    "--inputs", "-i",
+    default="[]",
+    help=(
+        "JSON array of input objects.  Each object: "
+        '{"type":"string|file", "value":"...", "node_title":"...", "node_field":"..."}'
+    ),
 )
 @click.option(
     "--output-node",
     default=None,
     help="_meta.title of the output node (default: last node in workflow).",
 )
-@click.option(
-    "--url", "-u",
-    default="",
-    help="Direct ComfyUI server URL (bypasses registered nodes & load balancing).",
-)
-@click.option("--user", default="", help="Basic-auth username (only with --url).")
-@click.option("--password", default="", help="Basic-auth password (only with --url).")
 def run_cmd(
     workflow: str,
-    assets: tuple[str, ...],
-    asset_node: str,
-    asset_param: str,
+    inputs: str,
     output_node: str | None,
-    url: str,
-    user: str,
-    password: str,
 ) -> None:
     """Execute a workflow on a ComfyUI node.
 
-    Uploads assets, submits the workflow, blocks until completion,
-    then prints download URLs for every generated file.
+    Uses locally registered nodes with load balancing (least busy node
+    is selected automatically).  Credentials are taken from the stored
+    node configuration — register nodes first with:
+
+        comfyui-cli node add --url URL [--user USER --password PASS]
 
     \b
     Examples:
       comfyui-cli run -w workflow.json
-      comfyui-cli run -w workflow.json -a input.png -a style.jpg
-      comfyui-cli run -w workflow.json -a video.mp4 --asset-node "Load Video"
-      comfyui-cli run -w workflow.json --url http://10.0.0.5:8188
+      comfyui-cli run -w workflow.json -i '[{"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"}]'
+      comfyui-cli run -w workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
       comfyui-cli run -w workflow.json --output-node "Save Image"
     """
-    # Resolve API client
-    if url:
-        api = ComfyUIApi(url, user=user, password=password)
-    else:
-        try:
-            api = node_manager.select_node()
-        except NodeNotFoundError:
-            raise click.UsageError(
-                "No nodes registered and no --url given.\n"
-                "  Register a node:  comfyui-cli node add --url URL\n"
-                "  Or pass directly: comfyui-cli run -w FILE --url URL"
-            )
+    try:
+        inputs_data = json.loads(inputs)
+    except json.JSONDecodeError as exc:
+        raise click.ClickException(f"Invalid JSON for --inputs: {exc}")
+
+    if not isinstance(inputs_data, list):
+        raise click.ClickException("--inputs must be a JSON array")
+
+    for i, item in enumerate(inputs_data):
+        if not isinstance(item, dict):
+            raise click.ClickException(f"--inputs[{i}] must be an object")
+        for key in ("type", "value", "node_title", "node_field"):
+            if key not in item:
+                raise click.ClickException(f"--inputs[{i}] missing required field '{key}'")
+        if item["type"] not in ("string", "file"):
+            raise click.ClickException(f"--inputs[{i}].type must be 'string' or 'file', got '{item['type']}'")
+
+    api = node_manager.select_node()
 
     try:
         rc = executor_run(
             workflow_path=workflow,
             api=api,
-            assets=list(assets),
-            asset_node_title=asset_node,
-            asset_param=asset_param,
+            inputs=inputs_data,
             output_node_title=output_node,
         )
     except ComfyUICLIError as exc:

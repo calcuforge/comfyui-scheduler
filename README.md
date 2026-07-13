@@ -24,8 +24,9 @@ comfyui-cli node add --url http://192.168.1.100:8188
 # 2. Run a workflow
 comfyui-cli run --workflow ./my_workflow.json
 
-# 3. Run with input images
-comfyui-cli run -w ./img2img.json --asset ./photo.png
+# 3. Run with inputs
+comfyui-cli run -w ./img2img.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"}]'
+comfyui-cli run -w ./t2i.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
 ```
 
 ---
@@ -102,13 +103,26 @@ comfyui-cli run --workflow ./workflow.json
 | Option | Required | Default | Description |
 |--------|----------|---------|-------------|
 | `--workflow`, `-w` | yes | — | Path to the ComfyUI API-format workflow JSON file |
-| `--asset`, `-a` | no | — | Asset file to upload. Repeat `-a` for multiple files |
-| `--asset-node` | no | `Load Image` | `_meta.title` of the node receiving uploaded assets |
-| `--asset-param` | no | `image` | Input parameter name on the asset node |
+| `--inputs`, `-i` | no | `[]` | JSON array of input objects (see below) |
 | `--output-node` | no | (last node) | `_meta.title` of the output node to collect results from |
-| `--url`, `-u` | no | — | Direct server URL (bypasses registered nodes and load balancing) |
-| `--user` | no | — | Basic-auth username (only with `--url`) |
-| `--password` | no | — | Basic-auth password (only with `--url`) |
+
+#### `--inputs` Format
+
+A JSON array where each object describes either a string value or a file to upload:
+
+```json
+[
+  {"type": "string", "value": "...",   "node_title": "...", "node_field": "..."},
+  {"type": "file",   "value": "./...", "node_title": "...", "node_field": "..."}
+]
+```
+
+| Field | Description |
+|-------|-------------|
+| `type` | `"string"` for a text value, `"file"` for a file path to upload |
+| `value` | The string content (for `"string"` type) or local file path (for `"file"` type) |
+| `node_title` | `_meta.title` of the workflow node to set this input on |
+| `node_field` | Input parameter name on that node |
 
 #### Examples
 
@@ -116,20 +130,17 @@ comfyui-cli run --workflow ./workflow.json
 # Simplest invocation: run on auto-selected idle node
 comfyui-cli run -w workflow.json
 
-# Direct-to-node (bypasses load balancing)
-comfyui-cli run -w workflow.json --url http://10.0.0.5:8188
+# Upload input images
+comfyui-cli run -w img2img.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"},{"type":"file","value":"./mask.png","node_title":"Load Mask","node_field":"image"}]'
 
-# Direct-to-node with auth
-comfyui-cli run -w workflow.json --url https://comfy.example.com --user admin --password s3cret
+# Set a text prompt
+comfyui-cli run -w t2i.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
 
-# Upload input images into a "Load Image" node
-comfyui-cli run -w img2img.json -a photo.png -a mask.png
-
-# Upload a video into a "Load Video" node
-comfyui-cli run -w vid2vid.json -a input.mp4 --asset-node "Load Video"
+# String + file together
+comfyui-cli run -w vid2vid.json -i '[{"type":"file","value":"./input.mp4","node_title":"Load Video","node_field":"video"},{"type":"string","value":"anime style","node_title":"Prompt","node_field":"text"}]'
 
 # Specify the output node
-comfyui-cli run -w workflow.json --output-node "Save Image"
+comfyui-cli run -w workflow.json -i '[...]' --output-node "Save Image"
 ```
 
 #### Output
@@ -137,6 +148,7 @@ comfyui-cli run -w workflow.json --output-node "Save Image"
 On success the tool prints download URLs:
 
 ```
+[input] Prompt.text = a cat
 [upload] photo.png -> default_upload_folder/photo.png
 [run] Submitting workflow to http://10.0.0.5:8188 ...
 [run] Output node: 'Save Image' (42)
@@ -174,7 +186,7 @@ $ comfyui-cli status --url http://10.0.0.5:8188
 
 ## Multi-Node Load Balancing
 
-When you run a workflow without `--url`, the tool automatically picks the node with the smallest queue (running + pending jobs).  This is how load balancing works:
+When you run a workflow the tool automatically picks the node with the smallest queue (running + pending jobs).  This is how load balancing works:
 
 1. All registered nodes are queried via `GET /queue`
 2. The node with the fewest `queue_running` + `queue_pending` entries wins

@@ -13,13 +13,23 @@ from .exceptions import ExecutionError, WorkflowError
 from .workflow import Workflow
 
 
+class InputItem:
+    """Single workflow input — either a string value or a file to upload."""
+
+    def __init__(self, type: str, value: str, node_title: str, node_field: str) -> None:
+        if type not in ("string", "file"):
+            raise ValueError(f"Invalid input type '{type}', must be 'string' or 'file'")
+        self.type = type
+        self.value = value
+        self.node_title = node_title
+        self.node_field = node_field
+
+
 def run(
     workflow_path: str | Path,
     api: ComfyUIApi,
     *,
-    assets: list[str | Path] | None = None,
-    asset_node_title: str = "Load Image",
-    asset_param: str = "image",
+    inputs: list[dict] | None = None,
     output_node_title: str | None = None,
 ) -> int:
     """Execute *workflow_path* on *api*, blocking until completion.
@@ -30,12 +40,12 @@ def run(
         Path to a ComfyUI API-format JSON workflow file.
     api:
         *ComfyUIApi* client pointing at the target node.
-    assets:
-        Local file paths to upload and bind into the workflow (images, videos, masks).
-    asset_node_title:
-        *_meta.title* of the node to receive uploaded assets (default ``"Load Image"``).
-    asset_param:
-        Input parameter name on the asset node (default ``"image"``).
+    inputs:
+        List of input dicts, each with:
+        - type: ``"string"`` | ``"file"``
+        - value: the string content or file path
+        - node_title: *_meta.title* of the target node
+        - node_field: input parameter name on that node
     output_node_title:
         If set, only this node's outputs are reported.  Otherwise the *last* node
         in the workflow is treated as the output node.
@@ -50,35 +60,28 @@ def run(
         raise WorkflowError(f"Workflow file not found: {wf_path}")
     wf = Workflow(wf_path)
 
-    # 2. Upload assets
-    assets = assets or []
-    for asset_path in assets:
-        ap = Path(asset_path)
-        if not ap.exists():
-            raise FileNotFoundError(f"Asset not found: {ap}")
-
-        ext = ap.suffix.lower()
-        if ext in {".png", ".jpg", ".jpeg", ".webp", ".gif", ".bmp", ".mask"}:
+    # 2. Apply inputs
+    for item in (inputs or []):
+        inp = InputItem(
+            type=item["type"],
+            value=item["value"],
+            node_title=item["node_title"],
+            node_field=item["node_field"],
+        )
+        if inp.type == "file":
+            ap = Path(inp.value)
+            if not ap.exists():
+                raise FileNotFoundError(f"File not found: {ap}")
             print(f"[upload] {ap.name} ...")
             result = api.upload_file(str(ap))
             uploaded_name = result["name"]
             uploaded_subfolder = result.get("subfolder", "")
-            # ComfyUI expects "subfolder/filename" or just "filename"
-            if uploaded_subfolder:
-                wf.set_node_param(asset_node_title, asset_param, f"{uploaded_subfolder}/{uploaded_name}")
-            else:
-                wf.set_node_param(asset_node_title, asset_param, uploaded_name)
-            print(f"[upload] {ap.name} -> {uploaded_subfolder}/{uploaded_name}")
+            composed = f"{uploaded_subfolder}/{uploaded_name}" if uploaded_subfolder else uploaded_name
+            wf.set_node_param(inp.node_title, inp.node_field, composed)
+            print(f"[upload] {ap.name} -> {composed}")
         else:
-            print(f"[upload] {ap.name} (video/other) ...")
-            result = api.upload_file(str(ap))
-            uploaded_name = result["name"]
-            uploaded_subfolder = result.get("subfolder", "")
-            if uploaded_subfolder:
-                wf.set_node_param(asset_node_title, asset_param, f"{uploaded_subfolder}/{uploaded_name}")
-            else:
-                wf.set_node_param(asset_node_title, asset_param, uploaded_name)
-            print(f"[upload] {ap.name} -> {uploaded_subfolder}/{uploaded_name}")
+            wf.set_node_param(inp.node_title, inp.node_field, inp.value)
+            print(f"[input] {inp.node_title}.{inp.node_field} = {inp.value[:80]}{'...' if len(inp.value) > 80 else ''}")
 
     # 3. Determine output node
     if output_node_title:
