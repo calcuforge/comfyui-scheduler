@@ -1,0 +1,24 @@
+id: qwen3_tts_voice_design
+api_json_file: data/default_workflows/workflow/qwen3_tts_voice_design.json
+type: text_to_speech
+purpose: Character voice design based on text-to-speech
+output_type: audio
+input_node_mapping:
+  prompt:
+    description: Timbre Prompt
+    node_input_field: "custom_instruct"
+    node_meta_title: "Voice Instruct"
+    value_type: string
+    required: true
+  content:
+    description: Audio text content
+    node_input_field: "text"
+    node_meta_title: "Voice Design Advanced"
+    value_type: string
+    required: false
+  seed:
+    description: Audio text content
+    node_input_field: "seed"
+    node_meta_title: "Voice Design Advanced"
+    value_type: int
+    required: false
