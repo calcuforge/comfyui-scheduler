@@ -1,8 +1,0 @@
-id: z_image_fp16
-api_json_file: data/default_workflows/z_image_fp16_step4.json
-type: text_to_image
-applicable_scenarios: text-to-image requests
-output_node:
-  node_meta_title: 保存图像
-  value_type: image
-input_node_mapping:

@@ -1,0 +1,145 @@
+{
+  "5": {
+    "inputs": {
+      "vae_name": "ae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "137": {
+    "inputs": {
+      "text": "一个人拿着牌子，上面写着“三皇六界九泉\"\n",
+      "clip": [
+        "720",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "prompt"
+    }
+  },
+  "148": {
+    "inputs": {
+      "samples": [
+        "700",
+        0
+      ],
+      "vae": [
+        "5",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "216": {
+    "inputs": {
+      "width": 1280,
+      "height": 720,
+      "aspect_ratio": "custom",
+      "swap_dimensions": "Off",
+      "upscale_factor": 1,
+      "batch_size": 1
+    },
+    "class_type": "CR SDXL Aspect Ratio",
+    "_meta": {
+      "title": "CR SDXL Aspect Ratio"
+    }
+  },
+  "363": {
+    "inputs": {
+      "filename_prefix": "z_image",
+      "images": [
+        "148",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "save image"
+    }
+  },
+  "665": {
+    "inputs": {
+      "text": "",
+      "clip": [
+        "720",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "Negative Prompt"
+    }
+  },
+  "700": {
+    "inputs": {
+      "seed": 732776328403142,
+      "steps": 4,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "denoise": 1,
+      "model": [
+        "715",
+        0
+      ],
+      "positive": [
+        "137",
+        0
+      ],
+      "negative": [
+        "665",
+        0
+      ],
+      "latent_image": [
+        "216",
+        4
+      ]
+    },
+    "class_type": "KSampler",
+    "_meta": {
+      "title": "KSampler"
+    }
+  },
+  "715": {
+    "inputs": {
+      "lora_name": "Z-Image-Fun-Lora-Distill-4-Steps-2602-ComfyUI.safetensors",
+      "strength_model": 1,
+      "model": [
+        "719",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "719": {
+    "inputs": {
+      "unet_name": "z_image_bf16.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "720": {
+    "inputs": {
+      "clip_name": "qwen_3_4b.safetensors",
+      "type": "lumina2",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  }
+}

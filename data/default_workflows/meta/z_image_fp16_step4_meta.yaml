@@ -1,0 +1,33 @@
+id: z_image_fp16
+api_json_file: data/default_workflows/workflow/z_image_fp16_step4.json
+type: text_to_image
+purpose: text-to-image requests
+output_node:
+  node_meta_title: "save image"
+  value_type: image
+input_node_mapping:
+  prompt:
+    node_input_field: "text"
+    node_meta_title: "prompt"
+    value_type: string
+    required: true
+  negative_prompt:
+    node_input_field: "text"
+    node_meta_title: "Negative Prompt"
+    value_type: string
+    required: false
+  seed:
+    node_input_field: "seed"
+    node_meta_title: "KSampler"
+    value_type: int
+    required: false
+  width:
+    node_input_field: "width"
+    node_meta_title: "CR SDXL Aspect Ratio"
+    value_type: int
+    required: true
+  height:
+    node_input_field: "height"
+    node_meta_title: "CR SDXL Aspect Ratio"
+    value_type: int
+    required: true
