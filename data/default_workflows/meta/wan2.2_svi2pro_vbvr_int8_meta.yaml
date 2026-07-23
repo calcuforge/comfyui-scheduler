@@ -1,0 +1,48 @@
+id: wan2.2_svi2pro_vbvr_int8
+api_json_file: data/default_workflows/workflow/wan2.2_svi2pro_vbvr_int8.json
+type: image-to-video
+purpose: image-to-video requests
+output_type: video
+input_node_mapping:
+  seed:
+    description: Random seed
+    node_input_field: "value"
+    node_meta_title: "Seed"
+    value_type: int
+    required: false
+  prompt:
+    description: "Image-to-Video prompt,format:prompt1|second\nprompt1|second\n..."
+    node_input_field: "text"
+    node_meta_title: "Prompt"
+    value_type: string
+    required: true
+  fps:
+    description: frame rate
+    node_input_field: "value"
+    node_meta_title: "Fps"
+    value_type: int
+    required: true
+  width:
+    description: Pixel width of the generated video
+    node_input_field: "value"
+    node_meta_title: "Width"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated video
+    node_input_field: "value"
+    node_meta_title: "Height"
+    value_type: int
+    required: true
+  negative_prompt:
+    description: Image-to-Video negative prompt
+    node_input_field: "text"
+    node_meta_title: "CLIP NEGATIVE"
+    value_type: string
+    required: false
+  image_file:
+    description: The reference image for the first frame of the video
+    node_input_field: "image"
+    node_meta_title: "LoadImage"
+    value_type: file
+    required: true

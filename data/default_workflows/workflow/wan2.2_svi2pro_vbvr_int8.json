@@ -1,0 +1,839 @@
+{
+  "87": {
+    "inputs": {
+      "samples": [
+        "278",
+        0
+      ],
+      "vae": [
+        "90",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "89": {
+    "inputs": {
+      "text": "色调艳丽，过曝，静态，场景切换,细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "clip": [
+        "430",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP NEGATIVE"
+    }
+  },
+  "90": {
+    "inputs": {
+      "vae_name": "wan_2.1_vae.safetensors"
+    },
+    "class_type": "VAELoader",
+    "_meta": {
+      "title": "加载VAE"
+    }
+  },
+  "93": {
+    "inputs": {
+      "text": [
+        "389",
+        0
+      ],
+      "clip": [
+        "430",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "134": {
+    "inputs": {
+      "length": [
+        "392",
+        0
+      ],
+      "motion_latent_count": 0,
+      "positive": [
+        "93",
+        0
+      ],
+      "negative": [
+        "89",
+        0
+      ],
+      "anchor_samples": [
+        "135",
+        0
+      ]
+    },
+    "class_type": "WanImageToVideoSVIPro",
+    "_meta": {
+      "title": "WanImageToVideoSVIPro"
+    }
+  },
+  "135": {
+    "inputs": {
+      "pixels": [
+        "422",
+        0
+      ],
+      "vae": [
+        "90",
+        0
+      ]
+    },
+    "class_type": "VAEEncode",
+    "_meta": {
+      "title": "VAE编码"
+    }
+  },
+  "141": {
+    "inputs": {
+      "lora_name": "SVI_v2_PRO_Wan2.2-I2V-A14B_HIGH_lora_rank_128_fp16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "420",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "142": {
+    "inputs": {
+      "lora_name": "SVI_v2_PRO_Wan2.2-I2V-A14B_LOW_lora_rank_128_fp16.safetensors",
+      "strength_model": 1,
+      "model": [
+        "428",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "152": {
+    "inputs": {
+      "text": [
+        "398",
+        0
+      ],
+      "clip": [
+        "430",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "157": {
+    "inputs": {
+      "text": "色调艳丽，过曝，静态，细节模糊不清，字幕，风格，作品，画作，画面，静止，整体发灰，最差质量，低质量，JPEG压缩残留，丑陋的，残缺的，多余的手指，画得不好的手部，画得不好的脸部，畸形的，毁容的，形态畸形的肢体，手指融合，静止不动的画面，杂乱的背景，三条腿，背景人很多，倒着走",
+      "clip": [
+        "430",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP NEGATIVE"
+    }
+  },
+  "160": {
+    "inputs": {
+      "length": [
+        "401",
+        0
+      ],
+      "motion_latent_count": 1,
+      "positive": [
+        "152",
+        0
+      ],
+      "negative": [
+        "157",
+        0
+      ],
+      "anchor_samples": [
+        "135",
+        0
+      ],
+      "prev_samples": [
+        "354",
+        3
+      ]
+    },
+    "class_type": "WanImageToVideoSVIPro",
+    "_meta": {
+      "title": "WanImageToVideoSVIPro"
+    }
+  },
+  "162": {
+    "inputs": {
+      "samples": [
+        "275",
+        0
+      ],
+      "vae": [
+        "90",
+        0
+      ]
+    },
+    "class_type": "VAEDecode",
+    "_meta": {
+      "title": "VAE解码"
+    }
+  },
+  "168": {
+    "inputs": {
+      "overlap": 5,
+      "overlap_side": "source",
+      "overlap_mode": "linear_blend",
+      "source_images": [
+        "354",
+        2
+      ],
+      "new_images": [
+        "162",
+        0
+      ]
+    },
+    "class_type": "ImageBatchExtendWithOverlap",
+    "_meta": {
+      "title": "Image Batch Extend With Overlap"
+    }
+  },
+  "275": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": [
+        "418",
+        0
+      ],
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 3,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "411",
+        0
+      ],
+      "positive": [
+        "160",
+        0
+      ],
+      "negative": [
+        "160",
+        1
+      ],
+      "latent_image": [
+        "276",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器（高级）"
+    }
+  },
+  "276": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": [
+        "418",
+        0
+      ],
+      "steps": 6,
+      "cfg": 3.5,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": 3,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "410",
+        0
+      ],
+      "positive": [
+        "160",
+        0
+      ],
+      "negative": [
+        "160",
+        1
+      ],
+      "latent_image": [
+        "160",
+        2
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器（高级）"
+    }
+  },
+  "277": {
+    "inputs": {
+      "add_noise": "enable",
+      "noise_seed": [
+        "418",
+        0
+      ],
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 0,
+      "end_at_step": 3,
+      "return_with_leftover_noise": "enable",
+      "model": [
+        "410",
+        0
+      ],
+      "positive": [
+        "134",
+        0
+      ],
+      "negative": [
+        "134",
+        1
+      ],
+      "latent_image": [
+        "134",
+        2
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器（高级）"
+    }
+  },
+  "278": {
+    "inputs": {
+      "add_noise": "disable",
+      "noise_seed": [
+        "418",
+        0
+      ],
+      "steps": 6,
+      "cfg": 1,
+      "sampler_name": "euler",
+      "scheduler": "simple",
+      "start_at_step": 3,
+      "end_at_step": 10000,
+      "return_with_leftover_noise": "disable",
+      "model": [
+        "411",
+        0
+      ],
+      "positive": [
+        "134",
+        0
+      ],
+      "negative": [
+        "134",
+        1
+      ],
+      "latent_image": [
+        "277",
+        0
+      ]
+    },
+    "class_type": "KSamplerAdvanced",
+    "_meta": {
+      "title": "K采样器（高级）"
+    }
+  },
+  "320": {
+    "inputs": {
+      "frame_rate": [
+        "381",
+        0
+      ],
+      "loop_count": 0,
+      "filename_prefix": "wan22",
+      "format": "video/h264-mp4",
+      "pix_fmt": "yuv420p",
+      "crf": 19,
+      "save_metadata": true,
+      "trim_to_audio": false,
+      "pingpong": false,
+      "save_output": true,
+      "images": [
+        "355",
+        0
+      ]
+    },
+    "class_type": "VHS_VideoCombine",
+    "_meta": {
+      "title": "Video Combine 🎥🅥🅗🅢"
+    }
+  },
+  "354": {
+    "inputs": {
+      "total": [
+        "385",
+        0
+      ],
+      "initial_value1": [
+        "87",
+        0
+      ],
+      "initial_value2": [
+        "278",
+        0
+      ]
+    },
+    "class_type": "easy forLoopStart",
+    "_meta": {
+      "title": "For循环-开始"
+    }
+  },
+  "355": {
+    "inputs": {
+      "flow": [
+        "354",
+        0
+      ],
+      "initial_value1": [
+        "168",
+        2
+      ],
+      "initial_value2": [
+        "275",
+        0
+      ]
+    },
+    "class_type": "easy forLoopEnd",
+    "_meta": {
+      "title": "For循环-结束"
+    }
+  },
+  "371": {
+    "inputs": {
+      "image": "desert.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "LoadImage"
+    }
+  },
+  "373": {
+    "inputs": {
+      "value": 640
+    },
+    "class_type": "JWInteger",
+    "_meta": {
+      "title": "Width"
+    }
+  },
+  "378": {
+    "inputs": {
+      "lora_name": "wan21-lightx2v-i2v-14b-480p-cfg-step-distill-rank128-bf16.safetensors",
+      "strength_model": 1.0000000000000002,
+      "model": [
+        "142",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "379": {
+    "inputs": {
+      "value": 16
+    },
+    "class_type": "JWInteger",
+    "_meta": {
+      "title": "Fps"
+    }
+  },
+  "381": {
+    "inputs": {
+      "Value": [
+        "379",
+        0
+      ]
+    },
+    "class_type": "DF_Int_to_Float",
+    "_meta": {
+      "title": "Int to Float"
+    }
+  },
+  "383": {
+    "inputs": {
+      "text": "镜头从高空广角缓慢推进，逐渐拉近南非干旱平原上的那个圆形水潭，画面平稳。 | 5\n镜头继续推进，水潭的轮廓越来越清晰，深蓝色的水面在红色土壤的映衬下显得格外神秘。 | 5\n镜头持续聚焦，直至水潭占据大部分画面，水面平静如镜，几乎没有任何波澜，营造出一种静谧而深邃的氛围。 | 5\n镜头最终停留在水潭入口的正上方，画面静止，仿佛凝视着深渊的入口。 | 2"
+    },
+    "class_type": "CR Text",
+    "_meta": {
+      "title": "Prompt"
+    }
+  },
+  "385": {
+    "inputs": {
+      "expression": "a-1",
+      "a": [
+        "405",
+        0
+      ]
+    },
+    "class_type": "MathExpression|pysssss",
+    "_meta": {
+      "title": "Math Expression 🐍"
+    }
+  },
+  "387": {
+    "inputs": {
+      "prompt": [
+        "383",
+        0
+      ],
+      "start_index": 0,
+      "max_rows": 1,
+      "remove_empty_lines": ""
+    },
+    "class_type": "easy promptLine",
+    "_meta": {
+      "title": "提示词行"
+    }
+  },
+  "388": {
+    "inputs": {
+      "STRING": [
+        "387",
+        0
+      ],
+      "delimiter": "|",
+      "splitlines": false,
+      "strip": true
+    },
+    "class_type": "GODMT_SplitString",
+    "_meta": {
+      "title": "Split String"
+    }
+  },
+  "389": {
+    "inputs": {
+      "index": 0,
+      "ANY": [
+        "388",
+        0
+      ]
+    },
+    "class_type": "GODMT_ListGetByIndex",
+    "_meta": {
+      "title": "List: Get By Index"
+    }
+  },
+  "390": {
+    "inputs": {
+      "index": 1,
+      "ANY": [
+        "388",
+        0
+      ]
+    },
+    "class_type": "GODMT_ListGetByIndex",
+    "_meta": {
+      "title": "List: Get By Index"
+    }
+  },
+  "392": {
+    "inputs": {
+      "expression": "a*b+5",
+      "a": [
+        "426",
+        0
+      ],
+      "b": [
+        "379",
+        0
+      ]
+    },
+    "class_type": "MathExpression|pysssss",
+    "_meta": {
+      "title": "Math Expression 🐍"
+    }
+  },
+  "395": {
+    "inputs": {
+      "expression": "a+1",
+      "a": [
+        "354",
+        1
+      ]
+    },
+    "class_type": "MathExpression|pysssss",
+    "_meta": {
+      "title": "Math Expression 🐍"
+    }
+  },
+  "396": {
+    "inputs": {
+      "prompt": [
+        "383",
+        0
+      ],
+      "start_index": [
+        "395",
+        0
+      ],
+      "max_rows": 1,
+      "remove_empty_lines": ""
+    },
+    "class_type": "easy promptLine",
+    "_meta": {
+      "title": "提示词行"
+    }
+  },
+  "397": {
+    "inputs": {
+      "STRING": [
+        "396",
+        0
+      ],
+      "delimiter": "|",
+      "splitlines": false,
+      "strip": true
+    },
+    "class_type": "GODMT_SplitString",
+    "_meta": {
+      "title": "Split String"
+    }
+  },
+  "398": {
+    "inputs": {
+      "index": 0,
+      "ANY": [
+        "397",
+        0
+      ]
+    },
+    "class_type": "GODMT_ListGetByIndex",
+    "_meta": {
+      "title": "List: Get By Index"
+    }
+  },
+  "399": {
+    "inputs": {
+      "index": 1,
+      "ANY": [
+        "397",
+        0
+      ]
+    },
+    "class_type": "GODMT_ListGetByIndex",
+    "_meta": {
+      "title": "List: Get By Index"
+    }
+  },
+  "401": {
+    "inputs": {
+      "expression": "a*b+5",
+      "a": [
+        "427",
+        0
+      ],
+      "b": [
+        "379",
+        0
+      ]
+    },
+    "class_type": "MathExpression|pysssss",
+    "_meta": {
+      "title": "Math Expression 🐍"
+    }
+  },
+  "405": {
+    "inputs": {
+      "string_text": [
+        "383",
+        0
+      ]
+    },
+    "class_type": "WWAA_LineCount",
+    "_meta": {
+      "title": "🪠️ WWAA LineCount"
+    }
+  },
+  "408": {
+    "inputs": {
+      "sage_attention": "sageattn_qk_int8_pv_fp16_triton",
+      "allow_compile": false,
+      "model": [
+        "141",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "409": {
+    "inputs": {
+      "sage_attention": "sageattn_qk_int8_pv_fp16_triton",
+      "allow_compile": false,
+      "model": [
+        "378",
+        0
+      ]
+    },
+    "class_type": "PathchSageAttentionKJ",
+    "_meta": {
+      "title": "Patch Sage Attention KJ"
+    }
+  },
+  "410": {
+    "inputs": {
+      "enable_fp16_accumulation": true,
+      "model": [
+        "408",
+        0
+      ]
+    },
+    "class_type": "ModelPatchTorchSettings",
+    "_meta": {
+      "title": "Model Patch Torch Settings"
+    }
+  },
+  "411": {
+    "inputs": {
+      "enable_fp16_accumulation": true,
+      "model": [
+        "409",
+        0
+      ]
+    },
+    "class_type": "ModelPatchTorchSettings",
+    "_meta": {
+      "title": "Model Patch Torch Settings"
+    }
+  },
+  "418": {
+    "inputs": {
+      "value": 23
+    },
+    "class_type": "INTConstant",
+    "_meta": {
+      "title": "Seed"
+    }
+  },
+  "420": {
+    "inputs": {
+      "lora_name": "VBVR-wan2.2-I2V-14B-high-SNR-Calibrated-Hybrid.safetensors",
+      "strength_model": 1,
+      "model": [
+        "429",
+        0
+      ]
+    },
+    "class_type": "LoraLoaderModelOnly",
+    "_meta": {
+      "title": "LoRA加载器（仅模型）"
+    }
+  },
+  "422": {
+    "inputs": {
+      "upscale_method": "nearest-exact",
+      "width": [
+        "373",
+        0
+      ],
+      "height": [
+        "423",
+        0
+      ],
+      "crop": "disabled",
+      "image": [
+        "371",
+        0
+      ]
+    },
+    "class_type": "ImageScale",
+    "_meta": {
+      "title": "缩放图像"
+    }
+  },
+  "423": {
+    "inputs": {
+      "value": 384
+    },
+    "class_type": "JWInteger",
+    "_meta": {
+      "title": "Height"
+    }
+  },
+  "426": {
+    "inputs": {
+      "text": [
+        "390",
+        0
+      ]
+    },
+    "class_type": "JWStringToInteger",
+    "_meta": {
+      "title": "String to Integer"
+    }
+  },
+  "427": {
+    "inputs": {
+      "text": [
+        "399",
+        0
+      ]
+    },
+    "class_type": "JWStringToInteger",
+    "_meta": {
+      "title": "String to Integer"
+    }
+  },
+  "428": {
+    "inputs": {
+      "unet_name": "wan2.2_i2v_low_noise_14B_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "429": {
+    "inputs": {
+      "unet_name": "wan2.2_i2v_high_noise_14B_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "430": {
+    "inputs": {
+      "clip_name": "umt5_xxl_fp16.safetensors",
+      "type": "wan",
+      "device": "default"
+    },
+    "class_type": "CLIPLoader",
+    "_meta": {
+      "title": "加载CLIP"
+    }
+  }
+}
