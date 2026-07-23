@@ -48,16 +48,15 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS workflow (
-            id              TEXT PRIMARY KEY,
-            status          TEXT    NOT NULL DEFAULT 'enabled',
-            api_json_file   TEXT    NOT NULL,
-            type            TEXT    NOT NULL,
-            purpose         TEXT    NOT NULL DEFAULT '',
-            output_type     TEXT    NOT NULL DEFAULT '',
-            meta_config     TEXT    NOT NULL,
-            workflow_config TEXT    NOT NULL,
-            created_at      TEXT    NOT NULL,
-            updated_at      TEXT    NOT NULL
+            id                  TEXT PRIMARY KEY,
+            status              TEXT    NOT NULL DEFAULT 'enabled',
+            type                TEXT    NOT NULL,
+            purpose             TEXT    NOT NULL DEFAULT '',
+            output_type         TEXT    NOT NULL DEFAULT '',
+            input_node_mapping  TEXT    NOT NULL DEFAULT '{}',
+            workflow_config     TEXT    NOT NULL,
+            created_at          TEXT    NOT NULL,
+            updated_at          TEXT    NOT NULL
         )
         """
     )
@@ -67,33 +66,31 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
 def upsert_workflow(conn: sqlite3.Connection, meta: dict, workflow_config: dict) -> None:
     """Insert or update a single workflow row (does NOT commit)."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
-    meta_json = json.dumps(meta, ensure_ascii=False, indent=2)
+    mapping_json = json.dumps(meta.get("input_node_mapping", {}), ensure_ascii=False)
     wf_json = json.dumps(workflow_config, ensure_ascii=False)
 
     conn.execute(
         """
-        INSERT INTO workflow (id, status, api_json_file, type, purpose,
-                              output_type, meta_config, workflow_config,
+        INSERT INTO workflow (id, status, type, purpose, output_type,
+                              input_node_mapping, workflow_config,
                               created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
-            status          = excluded.status,
-            api_json_file   = excluded.api_json_file,
-            type            = excluded.type,
-            purpose         = excluded.purpose,
-            output_type     = excluded.output_type,
-            meta_config     = excluded.meta_config,
-            workflow_config = excluded.workflow_config,
-            updated_at      = excluded.updated_at
+            status             = excluded.status,
+            type               = excluded.type,
+            purpose            = excluded.purpose,
+            output_type        = excluded.output_type,
+            input_node_mapping = excluded.input_node_mapping,
+            workflow_config    = excluded.workflow_config,
+            updated_at         = excluded.updated_at
         """,
         (
             meta["id"],
             meta.get("status", "enabled"),
-            meta.get("api_json_file", ""),
             meta.get("type", ""),
             meta.get("purpose", ""),
             meta.get("output_type", ""),
-            meta_json,
+            mapping_json,
             wf_json,
             now,
             now,
