@@ -16,14 +16,31 @@ from pathlib import Path
 from init_workflow_db import ensure_db, find_project_root, get_connection
 
 
-def build_input_field_list(mapping_json: str) -> str:
-    """Convert input_node_mapping JSON to a compact field list string."""
+def build_input_subtable(mapping_json: str) -> str:
+    """Convert input_node_mapping JSON to an inline HTML sub-table."""
     mapping = json.loads(mapping_json)
     if not mapping:
         return "-"
-    return ", ".join(
-        f"{name} ({info.get('value_type', '?')}, {'required' if info.get('required') else 'optional'})" for name, info in mapping.items()
+    items = sorted(
+        mapping.items(),
+        key=lambda kv: (not kv[1].get("required"), kv[0]),
     )
+    rows = "<table>"
+    rows += "<tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>"
+    for name, info in items:
+        vt = info.get("value_type", "?")
+        req = "yes" if info.get("required") else "no"
+        desc = (
+            info.get("description", "")
+            .replace("&", "&amp;")
+            .replace("<", "&lt;")
+            .replace(">", "&gt;")
+            .replace("|", "&#124;")
+            .replace("\n", " ")
+        )
+        rows += f"<tr><td><code>{name}</code></td><td>{vt}</td><td>{req}</td><td>{desc}</td></tr>"
+    rows += "</table>"
+    return rows
 
 
 def main() -> None:
@@ -49,7 +66,7 @@ def main() -> None:
 
     for row in rows:
         id_, type_, purpose, output_type, mapping_json = row
-        inputs = build_input_field_list(mapping_json)
+        inputs = build_input_subtable(mapping_json)
         lines.append(
             f"| {id_} | {type_} | {purpose} | {output_type} | {inputs} |"
         )
