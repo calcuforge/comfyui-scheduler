@@ -1,0 +1,42 @@
+id: qwen_image_edit_2511_int8_step4
+api_json_file: data/default_workflows/workflow/qwen_image_edit_2511_int8_step4.json
+type: image-to-image
+purpose: image-to-image requests
+output_type: image
+input_node_mapping:
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "KSampler"
+    value_type: int
+    required: false
+  prompt:
+    description: Image-to-Image prompt
+    node_input_field: "prompt"
+    node_meta_title: "TextEncodeQwenImageEditPlus (Positive)"
+    value_type: string
+    required: true
+  width:
+    description: Pixel width of the generated image
+    node_input_field: "width"
+    node_meta_title: "Empty Latent"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated image
+    node_input_field: "height"
+    node_meta_title: "Empty Latent"
+    value_type: int
+    required: true
+  negative_prompt:
+    description: Image-to-Image negative prompt
+    node_input_field: "prompt"
+    node_meta_title: "TextEncodeQwenImageEditPlus (Negative)"
+    value_type: string
+    required: false
+  image_file:
+    description: The reference image
+    node_input_field: "image"
+    node_meta_title: "LoadImage"
+    value_type: file
+    required: true
