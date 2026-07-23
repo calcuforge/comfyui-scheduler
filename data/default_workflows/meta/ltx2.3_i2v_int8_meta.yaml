@@ -1,4 +1,5 @@
 id: ltx2.3_i2v_int8
+status: disabled
 api_json_file: data/default_workflows/workflow/ltx3_i2v_int8.json
 type: image-to-video
 purpose: image-to-video requests

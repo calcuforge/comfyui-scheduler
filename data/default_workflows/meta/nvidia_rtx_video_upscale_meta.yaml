@@ -1,4 +1,5 @@
 id: nvidia_rtx_video_upscale
+status: enabled
 api_json_file: data/default_workflows/workflow/nvidia_rtx_video_upscale.json
 type: video-upscale
 purpose: video upscale requests

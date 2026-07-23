@@ -1,4 +1,5 @@
 id: qwen3_tts_voice_design
+status: enabled
 api_json_file: data/default_workflows/workflow/qwen3_tts_voice_design.json
 type: text_to_speech
 purpose: Character voice design based on text-to-speech

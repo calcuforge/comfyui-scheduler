@@ -1,4 +1,5 @@
 id: z_image_fp16
+status: enabled
 api_json_file: data/default_workflows/workflow/z_image_fp16_step4.json
 type: text_to_image
 purpose: text-to-image requests

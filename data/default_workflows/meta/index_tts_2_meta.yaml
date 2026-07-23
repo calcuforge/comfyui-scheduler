@@ -1,4 +1,5 @@
 id: index_tts_2
+status: enabled
 api_json_file: data/default_workflows/workflow/index_tts_2.json
 type: text_to_speech
 purpose: text-to-speech requests

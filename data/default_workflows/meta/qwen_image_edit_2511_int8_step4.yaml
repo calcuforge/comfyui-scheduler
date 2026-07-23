@@ -1,4 +1,5 @@
 id: qwen_image_edit_2511_int8_step4
+status: enabled
 api_json_file: data/default_workflows/workflow/qwen_image_edit_2511_int8_step4.json
 type: image-to-image
 purpose: image-to-image requests
