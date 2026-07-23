@@ -18,7 +18,7 @@ input_node_mapping:
     value_type: string
     required: false
   seed:
-    description: Audio text content
+    description: Random seed
     node_input_field: "seed"
     node_meta_title: "Voice Design Advanced"
     value_type: int
