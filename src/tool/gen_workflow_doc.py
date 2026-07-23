@@ -10,37 +10,37 @@ Usage::
 from __future__ import annotations
 
 import json
-import sqlite3
 from pathlib import Path
 
 from init_workflow_db import ensure_db, find_project_root, get_connection
 
 
-def build_input_subtable(mapping_json: str) -> str:
-    """Convert input_node_mapping JSON to an inline HTML sub-table."""
+def build_input_table(mapping_json: str) -> list[str]:
+    """Build a standalone markdown table for the input node mapping."""
     mapping = json.loads(mapping_json)
     if not mapping:
-        return "-"
+        return []
+
     items = sorted(
         mapping.items(),
         key=lambda kv: (not kv[1].get("required"), kv[0]),
     )
-    rows = "<table>"
-    rows += "<tr><th>Field</th><th>Type</th><th>Required</th><th>Description</th></tr>"
+
+    lines = [
+        "| Field | Type | Required | Description |",
+        "|-------|------|----------|-------------|",
+    ]
     for name, info in items:
         vt = info.get("value_type", "?")
         req = "yes" if info.get("required") else "no"
         desc = (
             info.get("description", "")
-            .replace("&", "&amp;")
-            .replace("<", "&lt;")
-            .replace(">", "&gt;")
-            .replace("|", "&#124;")
+            .replace("|", "\\|")
             .replace("\n", " ")
         )
-        rows += f"<tr><td><code>{name}</code></td><td>{vt}</td><td>{req}</td><td>{desc}</td></tr>"
-    rows += "</table>"
-    return rows
+        lines.append(f"| `{name}` | {vt} | {req} | {desc} |")
+
+    return lines
 
 
 def main() -> None:
@@ -60,16 +60,32 @@ def main() -> None:
     lines: list[str] = [
         "# Workflow List",
         "",
-        "| ID | Type | Purpose | Output | Input Fields |",
-        "|----|------|---------|--------|--------------|",
+        "## Summary",
+        "",
+        "| ID | Type | Purpose | Output |",
+        "|----|------|---------|--------|",
     ]
 
     for row in rows:
         id_, type_, purpose, output_type, mapping_json = row
-        inputs = build_input_subtable(mapping_json)
-        lines.append(
-            f"| {id_} | {type_} | {purpose} | {output_type} | {inputs} |"
-        )
+        mapping = json.loads(mapping_json)
+        field_count = len(mapping)
+        lines.append(f"| {id_} | {type_} | {purpose} | {output_type} |")
+
+    lines.append("")
+    lines.append("## Input Fields")
+    lines.append("")
+
+    for row in rows:
+        id_, type_, purpose, output_type, mapping_json = row
+        lines.append(f"### {id_}")
+        lines.append("")
+        input_lines = build_input_table(mapping_json)
+        if input_lines:
+            lines.extend(input_lines)
+        else:
+            lines.append("(no inputs)")
+        lines.append("")
 
     doc_dir = project_root / "doc"
     doc_dir.mkdir(parents=True, exist_ok=True)
