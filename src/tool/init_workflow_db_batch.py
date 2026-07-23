@@ -44,6 +44,10 @@ def main(meta_dir_rel: str) -> None:
         rel_path = str(yf.relative_to(project_root))
         try:
             meta, workflow_config = load_meta_and_workflow(project_root, rel_path)
+            if meta.get("status") == "disabled":
+                print(f"  SKIP {meta['id']} (status=disabled)")
+                skip += 1
+                continue
             upsert_workflow(conn, meta, workflow_config)
             print(f"  OK   {meta['id']}")
             ok += 1
