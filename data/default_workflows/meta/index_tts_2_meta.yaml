@@ -1,0 +1,18 @@
+id: index_tts_2
+api_json_file: data/default_workflows/workflow/index_tts_2.json
+type: text_to_speech
+purpose: text-to-speech requests
+output_type: audio
+input_node_mapping:
+  content:
+    description: Audio text content
+    node_input_field: "multi_line_prompt"
+    node_meta_title: "Multi Line Text"
+    value_type: string
+    required: true
+  voice_file:
+    description: Tone reference audio file
+    node_input_field: "audio"
+    node_meta_title: "LoadAudio"
+    value_type: file
+    required: true

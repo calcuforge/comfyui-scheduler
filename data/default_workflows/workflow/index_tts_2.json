@@ -1,0 +1,71 @@
+{
+  "11": {
+    "inputs": {
+      "multi_line_prompt": "仿佛试探一扇未曾开启的门。"
+    },
+    "class_type": "MultiLinePromptIndex",
+    "_meta": {
+      "title": "Multi Line Text"
+    }
+  },
+  "57": {
+    "inputs": {
+      "filename_prefix": "IN会话",
+      "quality": "V0",
+      "audioUI": "/api/view?filename=IN%E4%BC%9A%E8%AF%9D_00001.mp3&type=output&subfolder=&rand=0.21863510610684123",
+      "audio": [
+        "59",
+        0
+      ]
+    },
+    "class_type": "SaveAudioMP3",
+    "_meta": {
+      "title": "保存音频 (MP3)"
+    }
+  },
+  "58": {
+    "inputs": {
+      "audio": "f8b1504e2799c77536d3fae52be4f3ca.mp3",
+      "audioUI": "/api/view?filename=f8b1504e2799c77536d3fae52be4f3ca.mp3&type=input&subfolder=&rand=0.04562969341650347"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "LoadAudio"
+    }
+  },
+  "59": {
+    "inputs": {
+      "top_k": 30,
+      "top_p": 0.8,
+      "temperature": 0.8,
+      "num_beams": 3,
+      "max_mel_tokens": 1500,
+      "max_text_tokens_per_sentence": 120,
+      "custom_cuda_kernel": false,
+      "deepspeed": false,
+      "unload_model": true,
+      "emo_alpha": 1,
+      "emo_vector": "",
+      "use_emo_text": false,
+      "emo_text": "",
+      "use_random": false,
+      "emo_alpha_s2": 1,
+      "emo_vector_s2": "",
+      "use_emo_text_s2": false,
+      "emo_text_s2": "",
+      "use_random_s2": false,
+      "audio": [
+        "58",
+        0
+      ],
+      "text": [
+        "11",
+        0
+      ]
+    },
+    "class_type": "IndexTTS2Run",
+    "_meta": {
+      "title": "IndexTTS2 Run"
+    }
+  }
+}
