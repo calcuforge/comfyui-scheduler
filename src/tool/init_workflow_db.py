@@ -34,39 +34,17 @@ def find_project_root(start: Path) -> Path:
         candidate = parent
 
 
-def main(meta_rel_path: str) -> None:
-    # -- resolve paths -------------------------------------------------------
-    cwd = Path.cwd()
-    project_root = find_project_root(cwd)
-
-    meta_path = project_root / meta_rel_path
-    if not meta_path.exists():
-        print(f"ERROR: meta file not found: {meta_path}", file=sys.stderr)
-        sys.exit(1)
-
-    # -- parse meta YAML ----------------------------------------------------
-    with open(meta_path, "r", encoding="utf-8") as fh:
-        meta = yaml.safe_load(fh)
-
-    # -- resolve & read workflow JSON ---------------------------------------
-    api_json_rel = meta.get("api_json_file", "")
-    workflow_path = project_root / api_json_rel
-    if not workflow_path.exists():
-        print(f"ERROR: workflow file not found: {workflow_path}", file=sys.stderr)
-        sys.exit(1)
-
-    with open(workflow_path, "r", encoding="utf-8") as fh:
-        workflow_config = json.load(fh)
-
-    # -- ensure db directory exists ------------------------------------------
+def ensure_db(project_root: Path) -> Path:
+    """Create the db directory and return the database file path."""
     db_dir = project_root / "db"
     db_dir.mkdir(parents=True, exist_ok=True)
+    return db_dir / "workflows.db"
 
-    db_path = db_dir / "workflows.db"
+
+def get_connection(db_path: Path) -> sqlite3.Connection:
+    """Open a connection and create the workflow table if it does not exist."""
     conn = sqlite3.connect(str(db_path))
     conn.execute("PRAGMA journal_mode=WAL")
-
-    # -- create table if not exists -----------------------------------------
     conn.execute(
         """
         CREATE TABLE IF NOT EXISTS workflow (
@@ -83,8 +61,11 @@ def main(meta_rel_path: str) -> None:
         )
         """
     )
+    return conn
 
-    # -- upsert -------------------------------------------------------------
+
+def upsert_workflow(conn: sqlite3.Connection, meta: dict, workflow_config: dict) -> None:
+    """Insert or update a single workflow row (does NOT commit)."""
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     meta_json = json.dumps(meta, ensure_ascii=False, indent=2)
     wf_json = json.dumps(workflow_config, ensure_ascii=False)
@@ -119,6 +100,37 @@ def main(meta_rel_path: str) -> None:
         ),
     )
 
+
+def load_meta_and_workflow(project_root: Path, meta_rel_path: str) -> tuple[dict, dict]:
+    """Parse a meta YAML file and its referenced workflow JSON.
+
+    Returns ``(meta, workflow_config)``.
+    """
+    meta_path = project_root / meta_rel_path
+    if not meta_path.exists():
+        raise FileNotFoundError(f"Meta file not found: {meta_path}")
+
+    with open(meta_path, "r", encoding="utf-8") as fh:
+        meta = yaml.safe_load(fh)
+
+    api_json_rel = meta.get("api_json_file", "")
+    workflow_path = project_root / api_json_rel
+    if not workflow_path.exists():
+        raise FileNotFoundError(f"Workflow file not found: {workflow_path}")
+
+    with open(workflow_path, "r", encoding="utf-8") as fh:
+        workflow_config = json.load(fh)
+
+    return meta, workflow_config
+
+
+def main(meta_rel_path: str) -> None:
+    project_root = find_project_root(Path.cwd())
+    meta, workflow_config = load_meta_and_workflow(project_root, meta_rel_path)
+
+    db_path = ensure_db(project_root)
+    conn = get_connection(db_path)
+    upsert_workflow(conn, meta, workflow_config)
     conn.commit()
     conn.close()
 
