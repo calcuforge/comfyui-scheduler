@@ -1,0 +1,54 @@
+id: ltx2.3_i2v_int8
+api_json_file: data/default_workflows/workflow/ltx3_i2v_int8.json
+type: image-to-video
+purpose: image-to-video requests
+output_type: video
+input_node_mapping:
+  seed:
+    description: Random seed
+    node_input_field: "noise_seed"
+    node_meta_title: "RandomNoise"
+    value_type: int
+    required: false
+  prompt:
+    description: Image-to-Video prompt
+    node_input_field: "text"
+    node_meta_title: "CLIPTextEncode"
+    value_type: string
+    required: true
+  fps:
+    description: frame rate
+    node_input_field: "value"
+    node_meta_title: "Frame Rate(float)"
+    value_type: int
+    required: true
+  width:
+    description: Pixel width of the generated video
+    node_input_field: "value"
+    node_meta_title: "Width"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated video
+    node_input_field: "value"
+    node_meta_title: "Height"
+    value_type: int
+    required: true
+  negative_prompt:
+    description: Image-to-Video negative prompt
+    node_input_field: "text"
+    node_meta_title: "negative prompt"
+    value_type: string
+    required: false
+  length:
+    description: Total number of frames in the video (equals seconds multiplied by frame rate plus one)
+    node_input_field: "value"
+    node_meta_title: "Length"
+    value_type: int
+    required: true
+  image_file:
+    description: The reference image for the first frame of the video
+    node_input_field: "image"
+    node_meta_title: "LoadImage"
+    value_type: file
+    required: true
