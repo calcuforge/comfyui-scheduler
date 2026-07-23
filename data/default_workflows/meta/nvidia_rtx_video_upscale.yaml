@@ -1,0 +1,18 @@
+id: nvidia_rtx_video_upscale
+api_json_file: data/default_workflows/workflow/nvidia_rtx_video_upscale.json
+type: video-upscale
+purpose: video upscale requests
+output_type: video
+input_node_mapping:
+  magnification:
+    description: magnification
+    node_input_field: "resize_type.scale"
+    node_meta_title: "RTX Video Super Resolution"
+    value_type: int
+    required: true
+  video_file:
+    description: Source video that needs to be enlarged
+    node_input_field: "file"
+    node_meta_title: "LoadVideo"
+    value_type: file
+    required: true
