@@ -203,35 +203,40 @@ def run_cmd(
 
     # -- parse inputs -------------------------------------------------------
     try:
-        inputs_data: list[dict] = json.loads(inputs)
+        raw = json.loads(inputs)
     except json.JSONDecodeError as exc:
         output.error(f"Invalid JSON for --inputs: {exc}")
 
-    if not isinstance(inputs_data, list):
-        output.error("--inputs must be a JSON array")
-
     resolved_inputs: list[dict] = []
-    for i, item in enumerate(inputs_data):
-        if isinstance(item, dict) and len(item) == 1:
-            key = next(iter(item))
-            if key in mapping:
-                info = mapping[key]
-                resolved_inputs.append({
-                    "type": "file" if info["value_type"] == "file" else "string",
-                    "value": str(item[key]),
-                    "node_title": info["node_meta_title"],
-                    "node_field": info["node_input_field"],
-                })
-                continue
 
-        if not isinstance(item, dict):
-            output.error(f"--inputs[{i}] must be an object")
-        for k in ("type", "value", "node_title", "node_field"):
-            if k not in item:
-                output.error(f"--inputs[{i}] missing required field '{k}'")
-        if item["type"] not in ("string", "file"):
-            output.error(f"--inputs[{i}].type must be 'string' or 'file'")
-        resolved_inputs.append(item)
+    # JSON object → resolve each key via input_node_mapping
+    if isinstance(raw, dict):
+        if not mapping:
+            output.error("No input mapping available — use --workflow-file with explicit format or import the workflow first.")
+        for key, val in raw.items():
+            if key not in mapping:
+                available = list(mapping.keys())
+                output.error(f"Unknown input field '{key}'. Available: {available}")
+            info = mapping[key]
+            resolved_inputs.append({
+                "type": "file" if info["value_type"] == "file" else "string",
+                "value": str(val),
+                "node_title": info["node_meta_title"],
+                "node_field": info["node_input_field"],
+            })
+    # JSON array (backward compat) → explicit format
+    elif isinstance(raw, list):
+        for i, item in enumerate(raw):
+            if not isinstance(item, dict):
+                output.error(f"--inputs[{i}] must be an object")
+            for k in ("type", "value", "node_title", "node_field"):
+                if k not in item:
+                    output.error(f"--inputs[{i}] missing required field '{k}'")
+            if item["type"] not in ("string", "file"):
+                output.error(f"--inputs[{i}].type must be 'string' or 'file'")
+            resolved_inputs.append(item)
+    else:
+        output.error("--inputs must be a JSON object or array")
 
     # -- auto-register local node if none exist -----------------------------
     nodes = node_db.list_nodes()
