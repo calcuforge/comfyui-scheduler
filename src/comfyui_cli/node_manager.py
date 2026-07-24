@@ -57,31 +57,34 @@ def select_node() -> ComfyUIApi:
     while True:
         idle: list[tuple[ComfyUIApi, dict]] = []
         nonblocking: list[tuple[ComfyUIApi, dict]] = []
-        all_busy_blocking = True
+        reachable = 0
 
         for nd in nodes:
             api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
             try:
                 q = api.get_queue()
                 running = len(q.get("queue_running", []))
+                reachable += 1
             except Exception:
-                continue  # unreachable node, skip
+                print(f"[scheduler] node '{nd['name']}' ({nd['url']}) is unreachable")
+                continue
 
             if running == 0:
                 idle.append((api, nd))
-                all_busy_blocking = False
             elif not nd.get("blocking", True):
                 nonblocking.append((api, nd))
-                all_busy_blocking = False
+
+        if reachable == 0:
+            raise NodeNotFoundError(
+                "No ComfyUI node is reachable. Check the server URLs and try again."
+            )
 
         if idle:
-            # Priority 1: idle node with smallest pending queue
             best = min(idle, key=lambda x: len(x[0].get_queue().get("queue_pending", [])))
             print(f"[scheduler] selected idle node '{best[1]['name']}' ({best[1]['url']})")
             return best[0]
 
         if nonblocking:
-            # Priority 2: non-blocking node with smallest total queue
             best = min(
                 nonblocking,
                 key=lambda x: len(x[0].get_queue().get("queue_running", []))
@@ -93,12 +96,8 @@ def select_node() -> ComfyUIApi:
             )
             return best[0]
 
-        if all_busy_blocking:
-            print("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
-            time.sleep(5)
-
-    # unreachable
-    raise NodeNotFoundError("No reachable ComfyUI node found.")
+        print("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
+        time.sleep(5)
 
 
 def to_api(node: dict[str, Any]) -> ComfyUIApi:
