@@ -5,6 +5,7 @@ from __future__ import annotations
 import time
 from typing import Any
 
+from . import output
 from .api import ComfyUIApi
 from .node_db import add_node as _add_node
 from .node_db import clear_nodes as _clear_nodes
@@ -66,7 +67,7 @@ def select_node() -> ComfyUIApi:
                 running = len(q.get("queue_running", []))
                 reachable += 1
             except Exception:
-                print(f"[scheduler] node '{nd['name']}' ({nd['url']}) is unreachable")
+                output.debug(f"[scheduler] node '{nd['name']}' ({nd['url']}) is unreachable")
                 continue
 
             if running == 0:
@@ -81,7 +82,7 @@ def select_node() -> ComfyUIApi:
 
         if idle:
             best = min(idle, key=lambda x: len(x[0].get_queue().get("queue_pending", [])))
-            print(f"[scheduler] selected idle node '{best[1]['name']}' ({best[1]['url']})")
+            output.debug(f"[scheduler] selected idle node '{best[1]['name']}' ({best[1]['url']})")
             return best[0]
 
         if nonblocking:
@@ -90,13 +91,13 @@ def select_node() -> ComfyUIApi:
                 key=lambda x: len(x[0].get_queue().get("queue_running", []))
                               + len(x[0].get_queue().get("queue_pending", [])),
             )
-            print(
+            output.debug(
                 f"[scheduler] selected non-blocking node '{best[1]['name']}' "
                 f"({best[1]['url']})"
             )
             return best[0]
 
-        print("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
+        output.debug("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
         time.sleep(5)
 
 

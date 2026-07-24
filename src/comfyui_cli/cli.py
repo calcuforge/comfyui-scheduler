@@ -5,24 +5,29 @@ CLI entry point — ``multi-comfyui-cli`` command.
 from __future__ import annotations
 
 import json
-import sys
 from pathlib import Path
 
 import click
 import yaml
 
+from . import node_db
+from . import node_manager
+from . import output
+from . import workflow_db
 from .api import ComfyUIApi
 from .exceptions import ComfyUICLIError, NodeNotFoundError
 from .executor import run as executor_run
-from . import node_db
-from . import node_manager
-from . import workflow_db
 
 
 @click.group()
 @click.version_option(version="1.0.0", prog_name="multi-comfyui-cli")
-def main() -> None:
+@click.option("--debug", is_flag=True, default=False, help="Enable verbose progress output.")
+@click.pass_context
+def main(ctx: click.Context, debug: bool) -> None:
     """ComfyUI CLI — run workflows on remote ComfyUI nodes from the command line."""
+    output.set_debug(debug)
+    ctx.ensure_object(dict)
+    ctx.obj["debug"] = debug
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -36,44 +41,39 @@ def node() -> None:
 
 @node.command("add")
 @click.option("--id", "node_id", required=True, help="Unique node identifier")
-@click.option("--url", "-u", required=True, help="ComfyUI server URL (e.g. http://192.168.1.10:8188)")
+@click.option("--url", "-u", required=True, help="ComfyUI server URL")
 @click.option("--user", default="", help="Basic-auth username")
 @click.option("--password", default="", help="Basic-auth password")
-@click.option("--name", default="", help="Human-readable label for this node")
+@click.option("--name", default="", help="Human-readable label")
 def node_add(node_id: str, url: str, user: str, password: str, name: str) -> None:
     """Register or update a ComfyUI node."""
     node_db.add_node(node_id=node_id, url=url, user=user, password=password, name=name)
-    click.echo(f"Node added: {name or node_id}")
+    output.ok(f"Node added: {name or node_id}", {"id": node_id, "url": url})
 
 
 @node.command("list")
 def node_list() -> None:
     """List all registered nodes."""
-    nodes = node_manager.list_nodes()
-    if not nodes:
-        click.echo("(no nodes registered)")
-        return
-    for i, nd in enumerate(nodes, 1):
-        auth = " (auth)" if nd.get("user") else ""
-        click.echo(f"  {i}. {nd['name']}  [{nd['url']}]{auth}")
+    nodes = node_db.list_nodes()
+    output.ok("ok", {"nodes": nodes})
 
 
 @node.command("remove")
-@click.argument("name_or_url")
-def node_remove(name_or_url: str) -> None:
-    """Remove a registered node by name or URL."""
+@click.argument("key")
+def node_remove(key: str) -> None:
+    """Remove a registered node by id, name, or url."""
     try:
-        node_manager.remove_node(name_or_url)
-        click.echo(f"Node removed: {name_or_url}")
-    except NodeNotFoundError as exc:
-        raise click.ClickException(str(exc))
+        node_db.remove_node(key)
+        output.ok(f"Node removed: {key}")
+    except NodeNotFoundError:
+        output.error(f"No node matching '{key}'.")
 
 
 @node.command("clear")
 def node_clear() -> None:
     """Remove all registered nodes."""
-    node_manager.clear_nodes()
-    click.echo("All nodes removed.")
+    node_db.clear_nodes()
+    output.ok("All nodes removed.")
 
 
 @node.command("import")
@@ -90,38 +90,40 @@ def node_import(config_files: tuple[str, ...]) -> None:
         )
 
     project_root = workflow_db.find_project_root(Path.cwd())
-    ok = skip = 0
+    imported: list[str] = []
+    skipped: list[str] = []
 
     for cf in config_files:
         path = project_root / cf
         if not path.exists():
-            click.echo(f"  SKIP {cf} (not found)", err=True)
-            skip += 1
+            output.debug(f"  SKIP {cf} (not found)")
+            skipped.append(cf)
             continue
 
         with open(path, "r", encoding="utf-8") as fh:
             entries = yaml.safe_load(fh)
-
         if not entries:
             continue
 
         for entry in entries:
             url = entry.get("url", "").strip()
-            node_id = entry.get("id", "").strip()
-            if not url or not node_id:
+            nid = entry.get("id", "").strip()
+            if not url or not nid:
                 continue
             node_db.add_node(
-                node_id=node_id,
-                url=url,
+                node_id=nid, url=url,
                 user=entry.get("user", ""),
                 password=entry.get("password", ""),
                 name=entry.get("name", ""),
                 blocking=entry.get("blocking", True),
             )
-            click.echo(f"  OK   {node_id}")
-            ok += 1
+            output.debug(f"  OK   {nid}")
+            imported.append(nid)
 
-    click.echo(f"\nDone — {ok} imported, {skip} skipped")
+    output.ok(
+        f"Imported {len(imported)} node(s)",
+        {"imported": imported, "skipped": skipped},
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -129,35 +131,12 @@ def node_import(config_files: tuple[str, ...]) -> None:
 # ═══════════════════════════════════════════════════════════════════
 
 @main.command("run")
-@click.option(
-    "--workflow-id", "-w",
-    default=None,
-    help="Workflow id from the database (use 'multi-comfyui-cli workflow doc' to list).",
-)
-@click.option(
-    "--workflow-file", "-f",
-    default=None,
-    type=click.Path(exists=True),
-    help="Path to a workflow JSON file (when not using --workflow-id).",
-)
-@click.option(
-    "--node", "-n", "node_id",
-    default=None,
-    help="Node id to use (default: auto-select least busy node).",
-)
-@click.option(
-    "--inputs", "-i",
-    default="[]",
-    help=(
-        "JSON array of input objects.  Each object: "
-        '{"type":"string|file", "value":"...", "node_title":"...", "node_field":"..."}'
-    ),
-)
-@click.option(
-    "--output-node",
-    default=None,
-    help="_meta.title of the output node (default: last node in workflow).",
-)
+@click.option("--workflow-id", "-w", default=None, help="Workflow id from the database.")
+@click.option("--workflow-file", "-f", default=None, type=click.Path(exists=True),
+              help="Path to a workflow JSON file.")
+@click.option("--node", "-n", "node_id", default=None, help="Node id to use.")
+@click.option("--inputs", "-i", default="[]", help="JSON array of input objects.")
+@click.option("--output-node", default=None, help="_meta.title of the output node.")
 def run_cmd(
     workflow_id: str | None,
     workflow_file: str | None,
@@ -176,7 +155,7 @@ def run_cmd(
     count = conn.execute("SELECT COUNT(*) FROM workflow").fetchone()[0]
     conn.close()
     if count == 0:
-        click.echo("[auto] No workflows in database — running workflow import-all...")
+        output.debug("[auto] No workflows in database — importing...")
         meta_dirs = [
             project_root / "data" / "default_workflows" / "meta",
             project_root / "data" / "workflows" / "meta",
@@ -199,7 +178,7 @@ def run_cmd(
                     pass
         conn.commit()
         conn.close()
-        click.echo(f"[auto] Imported {imported} workflow(s).")
+        output.debug(f"[auto] Imported {imported} workflow(s).")
 
     # -- resolve workflow --------------------------------------------------
     output_type = ""
@@ -212,7 +191,7 @@ def run_cmd(
         ).fetchone()
         conn.close()
         if not row:
-            raise click.ClickException(f"Workflow not found: {workflow_id}")
+            output.error(f"Workflow not found: {workflow_id}")
         workflow_config = json.loads(row[0])
         mapping = json.loads(row[1])
         output_type = row[2]
@@ -221,18 +200,17 @@ def run_cmd(
             workflow_config = json.load(fh)
         mapping = {}
 
-    # -- parse inputs (with mapping support) --------------------------------
+    # -- parse inputs -------------------------------------------------------
     try:
         inputs_data: list[dict] = json.loads(inputs)
     except json.JSONDecodeError as exc:
-        raise click.ClickException(f"Invalid JSON for --inputs: {exc}")
+        output.error(f"Invalid JSON for --inputs: {exc}")
 
     if not isinstance(inputs_data, list):
-        raise click.ClickException("--inputs must be a JSON array")
+        output.error("--inputs must be a JSON array")
 
     resolved_inputs: list[dict] = []
     for i, item in enumerate(inputs_data):
-        # shortcut: {"field_name": value} → resolve via mapping
         if isinstance(item, dict) and len(item) == 1:
             key = next(iter(item))
             if key in mapping:
@@ -246,12 +224,12 @@ def run_cmd(
                 continue
 
         if not isinstance(item, dict):
-            raise click.ClickException(f"--inputs[{i}] must be an object")
-        for key in ("type", "value", "node_title", "node_field"):
-            if key not in item:
-                raise click.ClickException(f"--inputs[{i}] missing required field '{key}'")
+            output.error(f"--inputs[{i}] must be an object")
+        for k in ("type", "value", "node_title", "node_field"):
+            if k not in item:
+                output.error(f"--inputs[{i}] missing required field '{k}'")
         if item["type"] not in ("string", "file"):
-            raise click.ClickException(f"--inputs[{i}].type must be 'string' or 'file'")
+            output.error(f"--inputs[{i}].type must be 'string' or 'file'")
         resolved_inputs.append(item)
 
     # -- auto-register local node if none exist -----------------------------
@@ -263,18 +241,12 @@ def run_cmd(
             _r = _requests.get(f"{local_url}/system_stats", timeout=3)
             _r.raise_for_status()
         except Exception:
-            raise click.ClickException(
-                "No nodes registered and no local ComfyUI detected at 127.0.0.1:8188.\n"
-                "Register a node first: multi-comfyui-cli node import"
+            output.error(
+                "No nodes registered and no local ComfyUI detected at 127.0.0.1:8188."
             )
 
-        click.echo(f"[auto] Local ComfyUI detected at {local_url} — running node import...")
-        # default first, then user configs — so user overrides take precedence
-        config_files = [
-            "data/default_nodes.yaml",
-            "data/nodes.yaml",
-        ]
-        for config_path in config_files:
+        output.debug(f"[auto] Local ComfyUI detected at {local_url} — running node import...")
+        for config_path in ("data/default_nodes.yaml", "data/nodes.yaml"):
             path = project_root / config_path
             if not path.exists():
                 continue
@@ -295,20 +267,20 @@ def run_cmd(
                     blocking=entry.get("blocking", True),
                 )
         nodes = node_db.list_nodes()
-        click.echo(f"[auto] {len(nodes)} node(s) registered.")
+        output.debug(f"[auto] {len(nodes)} node(s) registered.")
 
     # -- resolve node -------------------------------------------------------
     if node_id:
         target = next((n for n in nodes if n["id"] == node_id), None)
         if not target:
-            raise click.ClickException(f"Node not found: {node_id}")
+            output.error(f"Node not found: {node_id}")
         api = node_manager.to_api(target)
     else:
         api = node_manager.select_node()
 
     # -- execute ------------------------------------------------------------
     try:
-        rc = executor_run(
+        result = executor_run(
             workflow_source=workflow_config,
             api=api,
             inputs=resolved_inputs,
@@ -316,10 +288,17 @@ def run_cmd(
             output_type=output_type,
         )
     except ComfyUICLIError as exc:
-        raise click.ClickException(str(exc))
+        output.error(str(exc))
 
-    if rc != 0:
-        sys.exit(rc)
+    output.ok(
+        f"Workflow completed — {len(result['files'])} file(s)",
+        {
+            "workflow_id": workflow_id,
+            "prompt_id": result["prompt_id"],
+            "output_type": output_type,
+            "files": result["files"],
+        },
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -327,25 +306,34 @@ def run_cmd(
 # ═══════════════════════════════════════════════════════════════════
 
 @main.command("status")
-@click.option(
-    "--url", "-u",
-    default="",
-    help="Check a specific URL instead of all registered nodes.",
-)
+@click.option("--url", "-u", default="", help="Check a specific URL.")
 def status_cmd(url: str) -> None:
     """Show queue status of registered nodes."""
+    nodes_status: list[dict] = []
     if url:
         api = ComfyUIApi(url)
-        _print_node_status(url, api)
+        nodes_status.append(_get_node_status(url, api))
     else:
-        nodes = node_manager.list_nodes()
+        nodes = node_db.list_nodes()
         if not nodes:
-            click.echo("(no nodes registered)")
-            return
+            output.ok("ok", {"nodes": [], "msg": "(no nodes registered)"})
         for nd in nodes:
-            name = nd["name"]
             api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
-            _print_node_status(name, api)
+            nodes_status.append(_get_node_status(nd["name"], api))
+    output.ok("ok", {"nodes": nodes_status})
+
+
+def _get_node_status(label: str, api: ComfyUIApi) -> dict:
+    try:
+        q = api.get_queue()
+        running = len(q.get("queue_running", []))
+        pending = len(q.get("queue_pending", []))
+        output.debug(f"  {label}: running={running}  pending={pending}")
+        return {"name": label, "url": api.url, "running": running, "pending": pending,
+                "status": "reachable"}
+    except ComfyUICLIError:
+        output.debug(f"  {label}: UNREACHABLE")
+        return {"name": label, "url": api.url, "status": "unreachable"}
 
 
 # ═══════════════════════════════════════════════════════════════════
@@ -368,17 +356,15 @@ def workflow_import(workflow_file: str) -> None:
     workflow_db.upsert_workflow(conn, meta, wf_config)
     conn.commit()
     conn.close()
-    click.echo(f"OK — upserted workflow '{meta['id']}'")
+    output.ok(
+        f"Upserted workflow '{meta['id']}'",
+        {"id": meta["id"], "type": meta.get("type", "")},
+    )
 
 
 @workflow.command("import-all")
-@click.option(
-    "--meta-dir", "-d",
-    default="data/default_workflows/meta",
-    help="Path to the meta YAML directory.",
-)
-def workflow_import_all(meta_dir: str) -> None:
-    """Batch-import meta YAML + workflow JSON files from the data dir.
+def workflow_import_all() -> None:
+    """Batch-import meta YAML + workflow JSON files.
 
     Default data is imported first, then non-default data so that
     user overrides take precedence over defaults with the same id.
@@ -392,10 +378,10 @@ def workflow_import_all(meta_dir: str) -> None:
     db_path = workflow_db.ensure_db(project_root)
     conn = workflow_db.get_connection(db_path)
 
-    ok = skip = 0
+    imported: list[str] = []
+    skipped: list[str] = []
 
-    def _import_meta_dir(meta_path: Path, wf_dir: Path, label: str) -> None:
-        nonlocal ok, skip
+    def _import_dir(meta_path: Path, wf_dir: Path, label: str) -> None:
         if not meta_path.is_dir():
             return
         for yf in sorted(meta_path.glob("*.yaml")):
@@ -403,46 +389,48 @@ def workflow_import_all(meta_dir: str) -> None:
             try:
                 meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
                 if meta.get("status") == "disabled":
-                    click.echo(f"  SKIP {meta['id']} (status=disabled)")
-                    skip += 1
+                    output.debug(f"  SKIP {meta['id']} (status=disabled)")
+                    skipped.append(meta["id"])
                     continue
                 workflow_db.upsert_workflow(conn, meta, wf_config)
-                click.echo(f"  OK   {meta['id']} ({label})")
-                ok += 1
+                output.debug(f"  OK   {meta['id']} ({label})")
+                imported.append(meta["id"])
             except FileNotFoundError as exc:
-                click.echo(f"  SKIP {yf.name}: {exc}", err=True)
-                skip += 1
+                output.debug(f"  SKIP {yf.name}: {exc}")
+                skipped.append(yf.name)
 
-        # import orphan JSON files (no matching meta)
         if wf_dir.is_dir():
             for jf in sorted(wf_dir.glob("*.json")):
                 stem = jf.stem
-                has_meta = (meta_path / f"{stem}_meta.yaml").exists() or (meta_path / f"{stem}.yaml").exists()
+                has_meta = (
+                    (meta_path / f"{stem}_meta.yaml").exists()
+                    or (meta_path / f"{stem}.yaml").exists()
+                )
                 if has_meta:
                     continue
                 rel_path = str(jf.relative_to(project_root))
                 try:
                     meta, wf_config = workflow_db.load_workflow_direct(project_root, rel_path)
                     if meta.get("status") == "disabled":
-                        click.echo(f"  SKIP {meta['id']} (status=disabled)")
-                        skip += 1
+                        output.debug(f"  SKIP {meta['id']} (status=disabled)")
+                        skipped.append(meta["id"])
                         continue
                     workflow_db.upsert_workflow(conn, meta, wf_config)
-                    click.echo(f"  OK   {meta['id']} (no meta, {label})")
-                    ok += 1
+                    output.debug(f"  OK   {meta['id']} (no meta, {label})")
+                    imported.append(meta["id"])
                 except FileNotFoundError as exc:
-                    click.echo(f"  SKIP {jf.name}: {exc}", err=True)
-                    skip += 1
+                    output.debug(f"  SKIP {jf.name}: {exc}")
+                    skipped.append(jf.name)
 
-    # phase 1 — default data first
-    _import_meta_dir(default_meta, default_wf_dir, "default")
-
-    # phase 2 — non-default data second (can override defaults)
-    _import_meta_dir(user_meta, user_wf_dir, "user")
+    _import_dir(default_meta, default_wf_dir, "default")
+    _import_dir(user_meta, user_wf_dir, "user")
 
     conn.commit()
     conn.close()
-    click.echo(f"\nDone — {ok} upserted, {skip} skipped")
+    output.ok(
+        f"Imported {len(imported)}, skipped {len(skipped)}",
+        {"imported": imported, "skipped": skipped},
+    )
 
 
 @workflow.command("doc")
@@ -453,30 +441,28 @@ def workflow_doc() -> None:
     conn = workflow_db.get_connection(db_path)
 
     rows = conn.execute(
-        """
-        SELECT id, type, purpose, output_type, input_node_mapping
-        FROM workflow
-        ORDER BY id
-        """
+        "SELECT id, type, purpose, output_type, input_node_mapping FROM workflow ORDER BY id"
     ).fetchall()
     conn.close()
 
-    lines: list[str] = [
-        "# Workflow List",
-        "",
-        "## Summary",
-        "",
+    lines = [
+        "# Workflow List", "",
+        "## Summary", "",
         "| ID | Type | Purpose | Output |",
         "|----|------|---------|--------|",
     ]
-
+    workflows = []
     for row in rows:
         id_, type_, purpose, output_type, mapping_json = row
         mapping = json.loads(mapping_json)
         lines.append(f"| {id_} | {type_} | {purpose} | {output_type} |")
+        workflows.append({
+            "id": id_, "type": type_, "purpose": purpose,
+            "output_type": output_type,
+            "input_fields": list(mapping.keys()),
+        })
 
     lines.extend(["", "## Input Fields", ""])
-
     for row in rows:
         id_, type_, purpose, output_type, mapping_json = row
         lines.append(f"### {id_}")
@@ -485,10 +471,8 @@ def workflow_doc() -> None:
         if not mapping:
             lines.append("(no inputs)")
         else:
-            items = sorted(
-                mapping.items(),
-                key=lambda kv: (not kv[1].get("required"), kv[0]),
-            )
+            items = sorted(mapping.items(),
+                           key=lambda kv: (not kv[1].get("required"), kv[0]))
             lines.append("| Field | Type | Required | Description |")
             lines.append("|-------|------|----------|-------------|")
             for name, info in items:
@@ -502,14 +486,7 @@ def workflow_doc() -> None:
     doc_dir.mkdir(parents=True, exist_ok=True)
     doc_path = doc_dir / "workflow.md"
     doc_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-    click.echo(f"OK — wrote {len(rows)} workflows to {doc_path}")
-
-
-def _print_node_status(label: str, api: ComfyUIApi) -> None:
-    try:
-        q = api.get_queue()
-        running = len(q.get("queue_running", []))
-        pending = len(q.get("queue_pending", []))
-        click.echo(f"  {label}: running={running}  pending={pending}")
-    except ComfyUICLIError:
-        click.echo(f"  {label}: UNREACHABLE")
+    output.ok(
+        f"Generated doc with {len(rows)} workflows",
+        {"path": str(doc_path), "workflows": workflows},
+    )

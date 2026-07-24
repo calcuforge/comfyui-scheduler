@@ -10,6 +10,7 @@ from typing import Any
 
 from requests.compat import urlencode
 
+from . import output
 from .api import ComfyUIApi
 from .exceptions import ExecutionError, WorkflowError
 from .workflow import Workflow
@@ -34,26 +35,11 @@ def run(
     inputs: list[dict] | None = None,
     output_node_title: str | None = None,
     output_type: str = "",
-) -> int:
+) -> dict:
     """Execute a workflow on *api*, blocking until completion.
 
-    Parameters
-    ----------
-    workflow_source:
-        Either a path to a ComfyUI API-format JSON file, or a workflow dict.
-    api:
-        *ComfyUIApi* client pointing at the target node.
-    inputs:
-        List of input dicts.
-    output_node_title:
-        If set, only this node's outputs are reported.
-    output_type:
-        ``image`` / ``video`` / ``audio`` — filters collected outputs.
-        When empty, all outputs are collected from all nodes.
-
-    Returns
-    -------
-    0 on success, 1 on failure.
+    Returns a dict with keys ``files`` and ``prompt_id``.
+    Raises ``WorkflowError`` / ``ExecutionError`` on failure.
     """
     # 1. Load workflow
     if isinstance(workflow_source, dict):
@@ -76,43 +62,40 @@ def run(
             ap = Path(inp.value)
             if not ap.exists():
                 raise FileNotFoundError(f"File not found: {ap}")
-            print(f"[upload] {ap.name} ...")
+            output.debug(f"[upload] {ap.name} ...")
             result = api.upload_file(str(ap))
             uploaded_name = result["name"]
             uploaded_subfolder = result.get("subfolder", "")
             composed = f"{uploaded_subfolder}/{uploaded_name}" if uploaded_subfolder else uploaded_name
             wf.set_node_param(inp.node_title, inp.node_field, composed)
-            print(f"[upload] {ap.name} -> {composed}")
+            output.debug(f"[upload] {ap.name} -> {composed}")
         else:
             wf.set_node_param(inp.node_title, inp.node_field, inp.value)
-            print(f"[input] {inp.node_title}.{inp.node_field} = {inp.value[:80]}{'...' if len(inp.value) > 80 else ''}")
+            output.debug(
+                f"[input] {inp.node_title}.{inp.node_field} = "
+                f"{inp.value[:80]}{'...' if len(inp.value) > 80 else ''}"
+            )
 
     # 3. Determine output node (if specified)
     output_nid = ""
     if output_node_title:
         output_nid = wf.get_node_id(output_node_title)
-        print(f"[run] Output node: '{output_node_title}' ({output_nid})")
+        output.debug(f"[run] Output node: '{output_node_title}' ({output_nid})")
 
-    print(f"[run] Submitting workflow to {api.url} ...")
+    output.debug(f"[run] Submitting workflow to {api.url} ...")
 
     # 4. Submit & wait
     try:
         prompt_id = api.queue_and_wait(wf)
     except ExecutionError as exc:
-        print(f"[error] Workflow execution failed: {exc}", file=sys.stderr)
-        return 1
+        raise ExecutionError(f"Workflow execution failed: {exc}")
     except Exception as exc:
-        print(f"[error] Unexpected error during execution: {exc}", file=sys.stderr)
-        return 1
+        raise ExecutionError(f"Unexpected error during execution: {exc}")
 
-    print(f"[run] Execution completed.  prompt_id={prompt_id}")
+    output.debug(f"[run] Execution completed.  prompt_id={prompt_id}")
 
     # 5. Collect outputs — scan all nodes, filter by output_type
-    try:
-        files = api.fetch_outputs(prompt_id, output_nid)
-    except Exception as exc:
-        print(f"[error] Failed to fetch outputs: {exc}", file=sys.stderr)
-        return 1
+    files = api.fetch_outputs(prompt_id, output_nid)
 
     if output_type:
         kind_map = {
@@ -124,15 +107,20 @@ def run(
         files = [f for f in files if f["kind"] in allowed]
 
     if not files:
-        print(f"[run] No '{output_type}' output files produced.", file=sys.stderr)
-        return 1
+        raise ExecutionError(f"No '{output_type}' output files produced.")
 
-    print(f"\n[output] {len(files)} file(s) generated:\n")
+    # Build full URLs
+    result_files = []
     for f in files:
         params = urlencode(
             {"filename": f["filename"], "subfolder": f["subfolder"], "type": f["type"]}
         )
         url = f"{api.url}/view?{params}"
-        print(f"  {f['kind']:6s}  {url}")
+        result_files.append({
+            "kind": f["kind"],
+            "url": url,
+            "filename": f["filename"],
+        })
+        output.debug(f"  {f['kind']:6s}  {url}")
 
-    return 0
+    return {"files": result_files, "prompt_id": prompt_id}
