@@ -97,6 +97,8 @@ def run(
 
     # 5. Collect outputs — scan all nodes, filter by output_type
     files = api.fetch_outputs(prompt_id, output_nid)
+    kinds_seen = {f["kind"] for f in files}
+    output.debug(f"[run] Raw output kinds found: {kinds_seen or '(none)'}")
 
     if output_type:
         kind_map = {
@@ -105,10 +107,15 @@ def run(
             "audio": {"audio"},
         }
         allowed = kind_map.get(output_type, set())
-        files = [f for f in files if f["kind"] in allowed]
+        matched = [f for f in files if f["kind"] in allowed]
+        if matched:
+            files = matched
+        else:
+            output.debug(f"[run] No files matched output_type='{output_type}', falling back to all files")
+        output.debug(f"[run] Final file count: {len(files)}")
 
     if not files:
-        raise ExecutionError(f"No '{output_type}' output files produced.")
+        raise ExecutionError(f"No output files produced.")
 
     # Build full URLs
     result_files = []
