@@ -218,12 +218,24 @@ def run_cmd(
                 available = list(mapping.keys())
                 output.error(f"Unknown input field '{key}'. Available: {available}")
             info = mapping[key]
-            resolved_inputs.append({
-                "type": "file" if info["value_type"] == "file" else "string",
-                "value": str(val),
-                "node_title": info["node_meta_title"],
-                "node_field": info["node_input_field"],
-            })
+            vt = info.get("value_type", "string")
+            if vt == "file":
+                resolved_inputs.append({
+                    "type": "file", "value": str(val),
+                    "node_title": info["node_meta_title"],
+                    "node_field": info["node_input_field"],
+                })
+            else:
+                # string / int / float — cast to proper type for ComfyUI
+                if vt == "int":
+                    val = int(val)
+                elif vt == "float":
+                    val = float(val)
+                resolved_inputs.append({
+                    "type": "string", "value": val,
+                    "node_title": info["node_meta_title"],
+                    "node_field": info["node_input_field"],
+                })
     # JSON array (backward compat) → explicit format
     elif isinstance(raw, list):
         for i, item in enumerate(raw):
