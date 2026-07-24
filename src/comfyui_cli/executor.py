@@ -71,9 +71,10 @@ def run(
             output.debug(f"[upload] {ap.name} -> {composed}")
         else:
             wf.set_node_param(inp.node_title, inp.node_field, inp.value)
+            val_str = str(inp.value)
             output.debug(
                 f"[input] {inp.node_title}.{inp.node_field} = "
-                f"{inp.value[:80]}{'...' if len(inp.value) > 80 else ''}"
+                f"{val_str[:80]}{'...' if len(val_str) > 80 else ''}"
             )
 
     # 3. Determine output node (if specified)
