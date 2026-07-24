@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import time
 from typing import Any
 
 from .api import ComfyUIApi
@@ -40,25 +41,64 @@ def clear_nodes() -> None:
 
 
 def select_node() -> ComfyUIApi:
-    """Return an API client for the most idle node."""
+    """Select a node with scheduling logic.
+
+    Rules (in priority order):
+    1. If any node is idle (queue_running == 0), pick it.
+    2. If no idle nodes but some nodes have blocking=False, pick one of them.
+    3. If all nodes are busy and all have blocking=True, block until one is idle.
+    """
     nodes = list_nodes()
     if not nodes:
         raise NodeNotFoundError(
             "No nodes registered.  Use 'multi-comfyui-cli node add --url URL' first."
         )
 
-    best: ComfyUIApi | None = None
-    best_size = 9999
-    for nd in nodes:
-        api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
-        size = api.queue_size()
-        if size < best_size:
-            best_size = size
-            best = api
+    while True:
+        idle: list[tuple[ComfyUIApi, dict]] = []
+        nonblocking: list[tuple[ComfyUIApi, dict]] = []
+        all_busy_blocking = True
 
-    if best is None:
-        raise NodeNotFoundError("No reachable ComfyUI node found.")
-    return best
+        for nd in nodes:
+            api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
+            try:
+                q = api.get_queue()
+                running = len(q.get("queue_running", []))
+            except Exception:
+                continue  # unreachable node, skip
+
+            if running == 0:
+                idle.append((api, nd))
+                all_busy_blocking = False
+            elif not nd.get("blocking", True):
+                nonblocking.append((api, nd))
+                all_busy_blocking = False
+
+        if idle:
+            # Priority 1: idle node with smallest pending queue
+            best = min(idle, key=lambda x: len(x[0].get_queue().get("queue_pending", [])))
+            print(f"[scheduler] selected idle node '{best[1]['name']}' ({best[1]['url']})")
+            return best[0]
+
+        if nonblocking:
+            # Priority 2: non-blocking node with smallest total queue
+            best = min(
+                nonblocking,
+                key=lambda x: len(x[0].get_queue().get("queue_running", []))
+                              + len(x[0].get_queue().get("queue_pending", [])),
+            )
+            print(
+                f"[scheduler] selected non-blocking node '{best[1]['name']}' "
+                f"({best[1]['url']})"
+            )
+            return best[0]
+
+        if all_busy_blocking:
+            print("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
+            time.sleep(5)
+
+    # unreachable
+    raise NodeNotFoundError("No reachable ComfyUI node found.")
 
 
 def to_api(node: dict[str, Any]) -> ComfyUIApi:
