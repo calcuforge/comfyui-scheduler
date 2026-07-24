@@ -15,7 +15,7 @@ from . import node_manager
 from . import output
 from . import workflow_db
 from .api import ComfyUIApi
-from .exceptions import ComfyUICLIError, NodeNotFoundError
+from .exceptions import ComfyUICLIError
 from .executor import run as executor_run
 
 
@@ -65,7 +65,7 @@ def node_remove(key: str) -> None:
     try:
         node_db.remove_node(key)
         output.ok(f"Node removed: {key}")
-    except NodeNotFoundError:
+    except node_db.NodeNotFoundError:
         output.error(f"No node matching '{key}'.")
 
 
@@ -270,13 +270,16 @@ def run_cmd(
         output.debug(f"[auto] {len(nodes)} node(s) registered.")
 
     # -- resolve node -------------------------------------------------------
-    if node_id:
-        target = next((n for n in nodes if n["id"] == node_id), None)
-        if not target:
-            output.error(f"Node not found: {node_id}")
-        api = node_manager.to_api(target)
-    else:
-        api = node_manager.select_node()
+    try:
+        if node_id:
+            target = next((n for n in nodes if n["id"] == node_id), None)
+            if not target:
+                output.error(f"Node not found: {node_id}")
+            api = node_manager.to_api(target)
+        else:
+            api = node_manager.select_node()
+    except node_db.NodeNotFoundError as exc:
+        output.error(str(exc))
 
     # -- execute ------------------------------------------------------------
     try:
@@ -287,7 +290,7 @@ def run_cmd(
             output_node_title=output_node,
             output_type=output_type,
         )
-    except ComfyUICLIError as exc:
+    except (ComfyUICLIError, node_db.NodeNotFoundError) as exc:
         output.error(str(exc))
 
     output.ok(
