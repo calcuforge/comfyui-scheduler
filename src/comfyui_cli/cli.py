@@ -35,17 +35,15 @@ def node() -> None:
 
 
 @node.command("add")
+@click.option("--id", "node_id", required=True, help="Unique node identifier")
 @click.option("--url", "-u", required=True, help="ComfyUI server URL (e.g. http://192.168.1.10:8188)")
 @click.option("--user", default="", help="Basic-auth username")
 @click.option("--password", default="", help="Basic-auth password")
 @click.option("--name", default="", help="Human-readable label for this node")
-def node_add(url: str, user: str, password: str, name: str) -> None:
-    """Register a new ComfyUI node."""
-    try:
-        node_manager.add_node(url, user=user, password=password, name=name)
-        click.echo(f"Node added: {name or url}")
-    except ValueError as exc:
-        raise click.ClickException(str(exc))
+def node_add(node_id: str, url: str, user: str, password: str, name: str) -> None:
+    """Register or update a ComfyUI node."""
+    node_db.add_node(node_id=node_id, url=url, user=user, password=password, name=name)
+    click.echo(f"Node added: {name or node_id}")
 
 
 @node.command("list")
@@ -109,21 +107,19 @@ def node_import(config_files: tuple[str, ...]) -> None:
 
         for entry in entries:
             url = entry.get("url", "").strip()
-            if not url:
+            node_id = entry.get("id", "").strip()
+            if not url or not node_id:
                 continue
-            try:
-                node_db.add_node(
-                    url=url,
-                    user=entry.get("user", ""),
-                    password=entry.get("password", ""),
-                    name=entry.get("name", ""),
-                    blocking=entry.get("blocking", True),
-                )
-                click.echo(f"  OK   {entry.get('name') or url}")
-                ok += 1
-            except ValueError:
-                click.echo(f"  SKIP {url} (already registered)")
-                skip += 1
+            node_db.add_node(
+                node_id=node_id,
+                url=url,
+                user=entry.get("user", ""),
+                password=entry.get("password", ""),
+                name=entry.get("name", ""),
+                blocking=entry.get("blocking", True),
+            )
+            click.echo(f"  OK   {node_id}")
+            ok += 1
 
     click.echo(f"\nDone — {ok} imported, {skip} skipped")
 

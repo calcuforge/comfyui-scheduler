@@ -1,4 +1,4 @@
-"""SQLite-backed node storage — replaces the old JSON-file persistence."""
+"""SQLite-backed node storage."""
 
 from __future__ import annotations
 
@@ -6,16 +6,14 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-import yaml
-
 from .workflow_db import ensure_db, find_project_root, get_connection
 
 
 def _node_table() -> str:
     return """
         CREATE TABLE IF NOT EXISTS node (
-            id         INTEGER PRIMARY KEY AUTOINCREMENT,
-            url        TEXT    NOT NULL UNIQUE,
+            id         TEXT PRIMARY KEY,
+            url        TEXT    NOT NULL,
             user       TEXT    NOT NULL DEFAULT '',
             password   TEXT    NOT NULL DEFAULT '',
             name       TEXT    NOT NULL DEFAULT '',
@@ -26,23 +24,29 @@ def _node_table() -> str:
     """
 
 
-def add_node(url: str, user: str = "", password: str = "", name: str = "", blocking: bool = True) -> None:
-    """Insert a node.  Raises ValueError if the URL already exists."""
+def add_node(node_id: str, url: str, user: str = "", password: str = "",
+             name: str = "", blocking: bool = True) -> None:
+    """Upsert a node by *node_id*."""
     project_root = find_project_root(Path.cwd())
     db_path = ensure_db(project_root)
     conn = get_connection(db_path)
     conn.execute(_node_table())
 
-    existing = conn.execute("SELECT id FROM node WHERE url = ?", (url.rstrip("/"),)).fetchone()
-    if existing:
-        conn.close()
-        raise ValueError(f"Node already registered: {url}")
-
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
     conn.execute(
-        "INSERT INTO node (url, user, password, name, blocking, created_at, updated_at) "
-        "VALUES (?, ?, ?, ?, ?, ?, ?)",
-        (url.rstrip("/"), user, password, name or url.rstrip("/"), int(blocking), now, now),
+        """
+        INSERT INTO node (id, url, user, password, name, blocking, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            url        = excluded.url,
+            user       = excluded.user,
+            password   = excluded.password,
+            name       = excluded.name,
+            blocking   = excluded.blocking,
+            updated_at = excluded.updated_at
+        """,
+        (node_id, url.rstrip("/"), user, password, name or node_id,
+         int(blocking), now, now),
     )
     conn.commit()
     conn.close()
@@ -53,28 +57,31 @@ def list_nodes() -> list[dict[str, Any]]:
     db_path = ensure_db(project_root)
     conn = get_connection(db_path)
     conn.execute(_node_table())
-    rows = conn.execute("SELECT url, user, password, name, blocking FROM node ORDER BY id").fetchall()
+    rows = conn.execute(
+        "SELECT id, url, user, password, name, blocking FROM node ORDER BY id"
+    ).fetchall()
     conn.close()
     return [
-        {"url": r[0], "user": r[1], "password": r[2], "name": r[3], "blocking": bool(r[4])}
+        {"id": r[0], "url": r[1], "user": r[2], "password": r[3],
+         "name": r[4], "blocking": bool(r[5])}
         for r in rows
     ]
 
 
-def remove_node(name_or_url: str) -> None:
-    key = name_or_url.rstrip("/")
+def remove_node(key: str) -> None:
+    key = key.rstrip("/")
     project_root = find_project_root(Path.cwd())
     db_path = ensure_db(project_root)
     conn = get_connection(db_path)
     conn.execute(_node_table())
     cursor = conn.execute(
-        "DELETE FROM node WHERE url = ? OR name = ?", (key, key)
+        "DELETE FROM node WHERE id = ? OR url = ? OR name = ?", (key, key, key)
     )
     conn.commit()
     deleted = cursor.rowcount
     conn.close()
     if deleted == 0:
-        raise NodeNotFoundError(f"No node matching '{name_or_url}'.")
+        raise NodeNotFoundError(f"No node matching '{key}'.")
 
 
 def clear_nodes() -> None:
@@ -85,38 +92,6 @@ def clear_nodes() -> None:
     conn.execute("DELETE FROM node")
     conn.commit()
     conn.close()
-
-
-def import_from_yaml(config_path: str, project_root: Path) -> tuple[int, int]:
-    """Import nodes from a YAML config file.  Returns ``(ok, skip)``."""
-    path = project_root / config_path
-    if not path.exists():
-        return 0, 0
-
-    with open(path, "r", encoding="utf-8") as fh:
-        nodes = yaml.safe_load(fh)
-
-    if not nodes:
-        return 0, 0
-
-    ok = skip = 0
-    for entry in nodes:
-        url = entry.get("url", "").strip()
-        if not url:
-            continue
-        try:
-            add_node(
-                url=url,
-                user=entry.get("user", ""),
-                password=entry.get("password", ""),
-                name=entry.get("name", ""),
-                blocking=entry.get("blocking", True),
-            )
-            ok += 1
-        except ValueError:
-            skip += 1
-
-    return ok, skip
 
 
 class NodeNotFoundError(Exception):
