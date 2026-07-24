@@ -1,0 +1,31 @@
+id: ominivoice_voice_design
+status: enabled
+api_json_file: data/default_workflows/workflow/ominivoice_voice_design.json
+type: text_to_speech
+purpose: Character voice design based on text-to-speech
+output_type: audio
+input_node_mapping:
+  voice_instruct:
+    description: Voice Instruct
+    node_input_field: "custom_instruct"
+    node_meta_title: "OmniVoice Voice Design TTS"
+    value_type: string
+    required: true
+  speed:
+    description: Speed
+    node_input_field: "speed"
+    node_meta_title: "OmniVoice Voice Design TTS"
+    value_type: float
+    required: false
+  content:
+    description: Audio text content
+    node_input_field: "text"
+    node_meta_title: "OmniVoice Voice Design TTS"
+    value_type: string
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "OmniVoice Voice Design TTS"
+    value_type: int
+    required: false

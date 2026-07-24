@@ -1,0 +1,41 @@
+{
+  "1": {
+    "inputs": {
+      "model": "OmniVoice",
+      "text": "你好，中国人在哪里",
+      "voice_instruct": "男,极低音调,中年",
+      "steps": 32,
+      "guidance_scale": 2,
+      "t_shift": 0.1,
+      "speed": 1,
+      "duration": 0,
+      "device": "cuda",
+      "dtype": "auto",
+      "attention": "sage_attention",
+      "seed": 721387987,
+      "position_temperature": 5,
+      "class_temperature": 0,
+      "layer_penalty_factor": 5,
+      "denoise": true,
+      "postprocess_output": true,
+      "keep_model_loaded": true
+    },
+    "class_type": "OmniVoiceVoiceDesignTTS",
+    "_meta": {
+      "title": "OmniVoice Voice Design TTS"
+    }
+  },
+  "2": {
+    "inputs": {
+      "audioUI": "/api/view?filename=ComfyUI_temp_kifbi_00001.flac&type=temp&subfolder=&rand=0.4498028746795564",
+      "audio": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "PreviewAudio",
+    "_meta": {
+      "title": "预览音频"
+    }
+  }
+}
