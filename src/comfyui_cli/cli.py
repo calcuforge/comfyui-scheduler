@@ -189,11 +189,11 @@ def workflow() -> None:
 
 
 @workflow.command("import")
-@click.argument("meta_file", type=click.Path(exists=True))
-def workflow_import(meta_file: str) -> None:
-    """Import a single workflow from a meta YAML file."""
+@click.argument("workflow_file", type=click.Path(exists=True))
+def workflow_import(workflow_file: str) -> None:
+    """Import a workflow from a meta YAML or workflow JSON file."""
     project_root = workflow_db.find_project_root(Path.cwd())
-    meta, wf_config = workflow_db.load_meta_and_workflow(project_root, meta_file)
+    meta, wf_config = workflow_db.resolve_import(project_root, workflow_file)
     db_path = workflow_db.ensure_db(project_root)
     conn = workflow_db.get_connection(db_path)
     workflow_db.upsert_workflow(conn, meta, wf_config)
@@ -209,22 +209,22 @@ def workflow_import(meta_file: str) -> None:
     help="Path to the meta YAML directory.",
 )
 def workflow_import_all(meta_dir: str) -> None:
-    """Batch-import all meta YAML files from a directory."""
+    """Batch-import meta YAML + workflow JSON files from the data dir."""
     project_root = workflow_db.find_project_root(Path.cwd())
     meta_path = project_root / meta_dir
+    workflow_dir = project_root / "data" / "default_workflows" / "workflow"
 
     if not meta_path.is_dir():
         raise click.ClickException(f"Meta directory not found: {meta_path}")
 
     yaml_files = sorted(meta_path.glob("*.yaml"))
-    if not yaml_files:
-        click.echo(f"No .yaml files found in {meta_path}")
-        return
 
     db_path = workflow_db.ensure_db(project_root)
     conn = workflow_db.get_connection(db_path)
 
     ok = skip = 0
+
+    # phase 1 — import all meta YAML files
     for yf in yaml_files:
         rel_path = str(yf.relative_to(project_root))
         try:
@@ -239,6 +239,27 @@ def workflow_import_all(meta_dir: str) -> None:
         except FileNotFoundError as exc:
             click.echo(f"  SKIP {yf.name}: {exc}", err=True)
             skip += 1
+
+    # phase 2 — import orphan JSON files (no matching meta)
+    if workflow_dir.is_dir():
+        for jf in sorted(workflow_dir.glob("*.json")):
+            stem = jf.stem
+            has_meta = (meta_path / f"{stem}_meta.yaml").exists() or (meta_path / f"{stem}.yaml").exists()
+            if has_meta:
+                continue  # already handled in phase 1
+            rel_path = str(jf.relative_to(project_root))
+            try:
+                meta, wf_config = workflow_db.load_workflow_direct(project_root, rel_path)
+                if meta.get("status") == "disabled":
+                    click.echo(f"  SKIP {meta['id']} (status=disabled)")
+                    skip += 1
+                    continue
+                workflow_db.upsert_workflow(conn, meta, wf_config)
+                click.echo(f"  OK   {meta['id']} (no meta)")
+                ok += 1
+            except FileNotFoundError as exc:
+                click.echo(f"  SKIP {jf.name}: {exc}", err=True)
+                skip += 1
 
     conn.commit()
     conn.close()

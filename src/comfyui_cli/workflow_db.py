@@ -107,3 +107,59 @@ def load_meta_and_workflow(project_root: Path, meta_rel_path: str) -> tuple[dict
         workflow_config = json.load(fh)
 
     return meta, workflow_config
+
+
+def load_workflow_direct(project_root: Path, rel_path: str) -> tuple[dict, dict]:
+    """Load a workflow JSON file directly, auto-resolving its meta YAML.
+
+    Looks for a matching meta file in ``data/default_workflows/meta/``
+    named ``{stem}_meta.yaml``.  If none is found, a minimal meta dict is
+    generated from the JSON filename.
+
+    Returns ``(meta, workflow_config)``.
+    """
+    wf_path = project_root / rel_path
+    if not wf_path.exists():
+        raise FileNotFoundError(f"Workflow file not found: {wf_path}")
+
+    with open(wf_path, "r", encoding="utf-8") as fh:
+        workflow_config = json.load(fh)
+
+    stem = wf_path.stem
+    meta_dir = project_root / "data" / "default_workflows" / "meta"
+
+    candidates = [
+        meta_dir / f"{stem}_meta.yaml",
+        meta_dir / f"{stem}.yaml",
+    ]
+    meta_path = next((c for c in candidates if c.exists()), None)
+
+    if meta_path is not None:
+        with open(meta_path, "r", encoding="utf-8") as fh:
+            meta = yaml.safe_load(fh)
+    else:
+        meta = {
+            "id": stem,
+            "status": "enabled",
+            "type": "",
+            "purpose": "",
+            "output_type": "",
+            "api_json_file": rel_path,
+            "input_node_mapping": {},
+        }
+
+    return meta, workflow_config
+
+
+def resolve_import(project_root: Path, rel_path: str) -> tuple[dict, dict]:
+    """Dispatch to the correct loader based on file extension.
+
+    ``.yaml`` / ``.yml`` → meta-driven import (``load_meta_and_workflow``).
+    ``.json``           → direct import (``load_workflow_direct``).
+    """
+    ext = Path(rel_path).suffix.lower()
+    if ext in (".yaml", ".yml"):
+        return load_meta_and_workflow(project_root, rel_path)
+    if ext == ".json":
+        return load_workflow_direct(project_root, rel_path)
+    raise ValueError(f"Unsupported file type: {ext}")
