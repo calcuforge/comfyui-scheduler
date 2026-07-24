@@ -4,6 +4,8 @@ api_json_file: data/default_workflows/workflow/z_image_fp16_step4.json
 type: text_to_image
 purpose: text-to-image requests
 output_type: image
+command_example: |
+  multi-comfyui-cli run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
 input_node_mapping:
   prompt:
     description: Text-to-Image prompt

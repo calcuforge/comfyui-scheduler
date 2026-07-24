@@ -4,6 +4,8 @@ api_json_file: data/default_workflows/workflow/ominivoice_voice_design.json
 type: text_to_speech
 purpose: Character voice design based on text-to-speech
 output_type: audio
+command_example: |
+  multi-comfyui-cli run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
 input_node_mapping:
   voice_instruct:
     description: Voice Instruct

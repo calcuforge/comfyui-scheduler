@@ -4,6 +4,8 @@ api_json_file: data/default_workflows/workflow/qwen_image_edit_2511_int8_step4.j
 type: image-to-image
 purpose: image-to-image requests
 output_type: image
+command_example: |
+  multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
 input_node_mapping:
   seed:
     description: Random seed

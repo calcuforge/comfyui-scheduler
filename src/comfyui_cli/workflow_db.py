@@ -43,6 +43,7 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
             output_type         TEXT    NOT NULL DEFAULT '',
             input_node_mapping  TEXT    NOT NULL DEFAULT '{}',
             workflow_config     TEXT    NOT NULL,
+            command_example     TEXT    NOT NULL DEFAULT '',
             created_at          TEXT    NOT NULL,
             updated_at          TEXT    NOT NULL
         )
@@ -61,8 +62,9 @@ def upsert_workflow(conn: sqlite3.Connection, meta: dict, workflow_config: dict)
         """
         INSERT INTO workflow (id, status, type, purpose, output_type,
                               input_node_mapping, workflow_config,
+                              command_example,
                               created_at, updated_at)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         ON CONFLICT(id) DO UPDATE SET
             status             = excluded.status,
             type               = excluded.type,
@@ -70,6 +72,7 @@ def upsert_workflow(conn: sqlite3.Connection, meta: dict, workflow_config: dict)
             output_type        = excluded.output_type,
             input_node_mapping = excluded.input_node_mapping,
             workflow_config    = excluded.workflow_config,
+            command_example    = excluded.command_example,
             updated_at         = excluded.updated_at
         """,
         (
@@ -80,6 +83,7 @@ def upsert_workflow(conn: sqlite3.Connection, meta: dict, workflow_config: dict)
             meta.get("output_type", ""),
             mapping_json,
             wf_json,
+            meta.get("command_example", "").strip(),
             now,
             now,
         ),

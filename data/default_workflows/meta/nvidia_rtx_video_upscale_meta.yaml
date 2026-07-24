@@ -4,6 +4,8 @@ api_json_file: data/default_workflows/workflow/nvidia_rtx_video_upscale.json
 type: video-upscale
 purpose: video upscale requests
 output_type: video
+command_example: |
+  multi-comfyui-cli run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/anson/Downloads/wan22_00002.mp4", "magnification": 2.0}'
 input_node_mapping:
   magnification:
     description: magnification

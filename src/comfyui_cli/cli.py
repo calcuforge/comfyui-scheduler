@@ -464,7 +464,7 @@ def workflow_doc() -> None:
     conn = workflow_db.get_connection(db_path)
 
     rows = conn.execute(
-        "SELECT id, type, purpose, output_type, input_node_mapping FROM workflow ORDER BY id"
+        "SELECT id, type, purpose, output_type, input_node_mapping, command_example FROM workflow ORDER BY id"
     ).fetchall()
     conn.close()
 
@@ -476,7 +476,7 @@ def workflow_doc() -> None:
     ]
     workflows = []
     for row in rows:
-        id_, type_, purpose, output_type, mapping_json = row
+        id_, type_, purpose, output_type, mapping_json, _ = row
         mapping = json.loads(mapping_json)
         lines.append(f"| {id_} | {type_} | {purpose} | {output_type} |")
         workflows.append({
@@ -487,7 +487,7 @@ def workflow_doc() -> None:
 
     lines.extend(["", "## Input Fields", ""])
     for row in rows:
-        id_, type_, purpose, output_type, mapping_json = row
+        id_, type_, purpose, output_type, mapping_json, cmd_example = row
         lines.append(f"### {id_}")
         lines.append("")
         mapping = json.loads(mapping_json)
@@ -503,6 +503,11 @@ def workflow_doc() -> None:
                 req = "yes" if info.get("required") else "no"
                 desc = info.get("description", "").replace("|", "\\|").replace("\n", " ")
                 lines.append(f"| `{name}` | {vt} | {req} | {desc} |")
+        if cmd_example:
+            lines.append("")
+            lines.append("```bash")
+            lines.append(cmd_example.strip())
+            lines.append("```")
         lines.append("")
 
     # Append static extra content if present

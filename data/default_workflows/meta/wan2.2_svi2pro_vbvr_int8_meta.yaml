@@ -4,6 +4,8 @@ api_json_file: data/default_workflows/workflow/wan2.2_svi2pro_vbvr_int8.json
 type: image-to-video
 purpose: image-to-video requests
 output_type: video
+command_example: |
+  multi-comfyui-cli run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
 input_node_mapping:
   seed:
     description: Random seed

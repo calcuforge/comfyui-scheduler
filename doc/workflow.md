@@ -7,7 +7,6 @@
 | index_tts_2 | text_to_speech | text-to-speech requests | audio |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
-| qwen3_tts_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
 | wan2.2_svi2pro_vbvr_int8 | image-to-video | image-to-video requests | video |
 | z_image_fp16 | text_to_image | text-to-image requests | image |
@@ -21,12 +20,20 @@
 | `content` | string | yes | Audio text content |
 | `voice_file` | file | yes | Tone reference audio file |
 
+```bash
+multi-comfyui-cli run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
+```
+
 ### nvidia_rtx_video_upscale
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `magnification` | float | yes | magnification |
 | `video_file` | file | yes | Source video that needs to be enlarged |
+
+```bash
+multi-comfyui-cli run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/anson/Downloads/wan22_00002.mp4", "magnification": 2.0}'
+```
 
 ### ominivoice_voice_design
 
@@ -37,13 +44,9 @@
 | `seed` | int | no | Random seed |
 | `speed` | float | no | Speed |
 
-### qwen3_tts_voice_design
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `prompt` | string | yes | Timbre Prompt |
-| `content` | string | no | Audio text content |
-| `seed` | int | no | Random seed |
+```bash
+multi-comfyui-cli run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
+```
 
 ### qwen_image_edit_2511_int8_step4
 
@@ -55,6 +58,10 @@
 | `width` | int | yes | Pixel width of the generated image |
 | `negative_prompt` | string | no | Image-to-Image negative prompt |
 | `seed` | int | no | Random seed |
+
+```bash
+multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+```
 
 ### wan2.2_svi2pro_vbvr_int8
 
@@ -68,6 +75,10 @@
 | `negative_prompt` | string | no | Image-to-Video negative prompt |
 | `seed` | int | no | Random seed |
 
+```bash
+multi-comfyui-cli run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
+```
+
 ### z_image_fp16
 
 | Field | Type | Required | Description |
@@ -77,6 +88,10 @@
 | `width` | int | yes | Pixel width of the generated image |
 | `negative_prompt` | string | no | Text-to-Image negative prompt |
 | `seed` | int | no | Random seed |
+
+```bash
+multi-comfyui-cli run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
+```
 
 
 ## Run Output
