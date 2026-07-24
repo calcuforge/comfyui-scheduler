@@ -202,11 +202,12 @@ def run_cmd(
         click.echo(f"[auto] Imported {imported} workflow(s).")
 
     # -- resolve workflow --------------------------------------------------
+    output_type = ""
     if workflow_id:
         db_path = workflow_db.ensure_db(project_root)
         conn = workflow_db.get_connection(db_path)
         row = conn.execute(
-            "SELECT workflow_config, input_node_mapping FROM workflow WHERE id = ?",
+            "SELECT workflow_config, input_node_mapping, output_type FROM workflow WHERE id = ?",
             (workflow_id,),
         ).fetchone()
         conn.close()
@@ -214,6 +215,7 @@ def run_cmd(
             raise click.ClickException(f"Workflow not found: {workflow_id}")
         workflow_config = json.loads(row[0])
         mapping = json.loads(row[1])
+        output_type = row[2]
     else:
         with open(project_root / workflow_file, "r", encoding="utf-8") as fh:
             workflow_config = json.load(fh)
@@ -311,6 +313,7 @@ def run_cmd(
             api=api,
             inputs=resolved_inputs,
             output_node_title=output_node,
+            output_type=output_type,
         )
     except ComfyUICLIError as exc:
         raise click.ClickException(str(exc))

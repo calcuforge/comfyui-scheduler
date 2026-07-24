@@ -8,6 +8,8 @@ import sys
 from pathlib import Path
 from typing import Any
 
+from requests.compat import urlencode
+
 from .api import ComfyUIApi
 from .exceptions import ExecutionError, WorkflowError
 from .workflow import Workflow
@@ -31,6 +33,7 @@ def run(
     *,
     inputs: list[dict] | None = None,
     output_node_title: str | None = None,
+    output_type: str = "",
 ) -> int:
     """Execute a workflow on *api*, blocking until completion.
 
@@ -41,14 +44,12 @@ def run(
     api:
         *ComfyUIApi* client pointing at the target node.
     inputs:
-        List of input dicts, each with:
-        - type: ``"string"`` | ``"file"``
-        - value: the string content or file path
-        - node_title: *_meta.title* of the target node
-        - node_field: input parameter name on that node
+        List of input dicts.
     output_node_title:
-        If set, only this node's outputs are reported.  Otherwise the *last* node
-        in the workflow is treated as the output node.
+        If set, only this node's outputs are reported.
+    output_type:
+        ``image`` / ``video`` / ``audio`` — filters collected outputs.
+        When empty, all outputs are collected from all nodes.
 
     Returns
     -------
@@ -86,16 +87,13 @@ def run(
             wf.set_node_param(inp.node_title, inp.node_field, inp.value)
             print(f"[input] {inp.node_title}.{inp.node_field} = {inp.value[:80]}{'...' if len(inp.value) > 80 else ''}")
 
-    # 3. Determine output node
+    # 3. Determine output node (if specified)
+    output_nid = ""
     if output_node_title:
         output_nid = wf.get_node_id(output_node_title)
-    else:
-        # Last node in the dict is the output node (convention)
-        output_nid = list(wf.keys())[-1]
-        output_node_title = wf._title(wf[output_nid]) or output_nid
+        print(f"[run] Output node: '{output_node_title}' ({output_nid})")
 
     print(f"[run] Submitting workflow to {api.url} ...")
-    print(f"[run] Output node: '{output_node_title}' ({output_nid})")
 
     # 4. Submit & wait
     try:
@@ -109,20 +107,28 @@ def run(
 
     print(f"[run] Execution completed.  prompt_id={prompt_id}")
 
-    # 5. Collect outputs
+    # 5. Collect outputs — scan all nodes, filter by output_type
     try:
         files = api.fetch_outputs(prompt_id, output_nid)
     except Exception as exc:
         print(f"[error] Failed to fetch outputs: {exc}", file=sys.stderr)
         return 1
 
+    if output_type:
+        kind_map = {
+            "image": {"image"},
+            "video": {"video", "gif"},
+            "audio": {"audio"},
+        }
+        allowed = kind_map.get(output_type, set())
+        files = [f for f in files if f["kind"] in allowed]
+
     if not files:
-        print("[run] No output files produced.", file=sys.stderr)
+        print(f"[run] No '{output_type}' output files produced.", file=sys.stderr)
         return 1
 
     print(f"\n[output] {len(files)} file(s) generated:\n")
     for f in files:
-        from requests.compat import urlencode
         params = urlencode(
             {"filename": f["filename"], "subfolder": f["subfolder"], "type": f["type"]}
         )

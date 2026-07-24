@@ -173,28 +173,33 @@ class ComfyUIApi:
                 loop.close()
 
     def fetch_outputs(
-        self, prompt_id: str, output_node_id: str
+        self, prompt_id: str, output_node_id: str = ""
     ) -> list[dict[str, str]]:
-        """Return metadata dicts for each output file produced by *output_node_id*."""
+        """Return metadata dicts for each output file.
+
+        If *output_node_id* is given, only that node's outputs are returned.
+        Otherwise scans all nodes.
+        """
         history = self.get_history(prompt_id)
-        try:
-            outputs = history[prompt_id]["outputs"][output_node_id]
-        except KeyError:
-            raise ComfyUICLIError(
-                f"Output node '{output_node_id}' not found in history for {prompt_id}."
-            )
+        nodes_outputs = history.get(prompt_id, {}).get("outputs", {})
+        targets = (
+            {output_node_id: nodes_outputs.get(output_node_id, {})}
+            if output_node_id
+            else nodes_outputs
+        )
 
         files: list[dict[str, str]] = []
-        for kind in ("images", "gifs", "videos", "audio"):
-            for item in outputs.get(kind, []):
-                files.append(
-                    {
-                        "filename": item["filename"],
-                        "subfolder": item.get("subfolder", ""),
-                        "type": item.get("type", "output"),
-                        "kind": kind.rstrip("s"),
-                    }
-                )
+        for outputs in targets.values():
+            for kind in ("images", "gifs", "videos", "audio"):
+                for item in outputs.get(kind, []):
+                    files.append(
+                        {
+                            "filename": item["filename"],
+                            "subfolder": item.get("subfolder", ""),
+                            "type": item.get("type", "output"),
+                            "kind": kind.rstrip("s"),
+                        }
+                    )
         return files
 
     def build_output_urls(
