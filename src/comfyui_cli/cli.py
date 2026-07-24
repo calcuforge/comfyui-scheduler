@@ -177,22 +177,29 @@ def run_cmd(
     conn.close()
     if count == 0:
         click.echo("[auto] No workflows in database — running workflow import-all...")
-        meta_path = project_root / "data" / "default_workflows" / "meta"
-        yaml_files = sorted(meta_path.glob("*.yaml")) if meta_path.is_dir() else []
+        meta_dirs = [
+            project_root / "data" / "default_workflows" / "meta",
+            project_root / "data" / "workflows" / "meta",
+        ]
         db_path = workflow_db.ensure_db(project_root)
         conn = workflow_db.get_connection(db_path)
-        for yf in yaml_files:
-            rel_path = str(yf.relative_to(project_root))
-            try:
-                meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
-                if meta.get("status") == "disabled":
-                    continue
-                workflow_db.upsert_workflow(conn, meta, wf_config)
-            except FileNotFoundError:
-                pass
+        imported = 0
+        for meta_path in meta_dirs:
+            if not meta_path.is_dir():
+                continue
+            for yf in sorted(meta_path.glob("*.yaml")):
+                rel_path = str(yf.relative_to(project_root))
+                try:
+                    meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
+                    if meta.get("status") == "disabled":
+                        continue
+                    workflow_db.upsert_workflow(conn, meta, wf_config)
+                    imported += 1
+                except FileNotFoundError:
+                    pass
         conn.commit()
         conn.close()
-        click.echo(f"[auto] Imported {len(yaml_files)} workflow(s).")
+        click.echo(f"[auto] Imported {imported} workflow(s).")
 
     # -- resolve workflow --------------------------------------------------
     if workflow_id:
@@ -260,8 +267,12 @@ def run_cmd(
             )
 
         click.echo(f"[auto] Local ComfyUI detected at {local_url} — running node import...")
-        # Import default node configs with local URL overridden
-        for config_path in ("data/default_nodes.yaml", "data/nodes.yaml"):
+        # default first, then user configs — so user overrides take precedence
+        config_files = [
+            "data/default_nodes.yaml",
+            "data/nodes.yaml",
+        ]
+        for config_path in config_files:
             path = project_root / config_path
             if not path.exists():
                 continue
@@ -364,57 +375,67 @@ def workflow_import(workflow_file: str) -> None:
     help="Path to the meta YAML directory.",
 )
 def workflow_import_all(meta_dir: str) -> None:
-    """Batch-import meta YAML + workflow JSON files from the data dir."""
+    """Batch-import meta YAML + workflow JSON files from the data dir.
+
+    Default data is imported first, then non-default data so that
+    user overrides take precedence over defaults with the same id.
+    """
     project_root = workflow_db.find_project_root(Path.cwd())
-    meta_path = project_root / meta_dir
-    workflow_dir = project_root / "data" / "default_workflows" / "workflow"
-
-    if not meta_path.is_dir():
-        raise click.ClickException(f"Meta directory not found: {meta_path}")
-
-    yaml_files = sorted(meta_path.glob("*.yaml"))
+    default_meta = project_root / "data" / "default_workflows" / "meta"
+    user_meta = project_root / "data" / "workflows" / "meta"
+    default_wf_dir = project_root / "data" / "default_workflows" / "workflow"
+    user_wf_dir = project_root / "data" / "workflows" / "workflow"
 
     db_path = workflow_db.ensure_db(project_root)
     conn = workflow_db.get_connection(db_path)
 
     ok = skip = 0
 
-    # phase 1 — import all meta YAML files
-    for yf in yaml_files:
-        rel_path = str(yf.relative_to(project_root))
-        try:
-            meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
-            if meta.get("status") == "disabled":
-                click.echo(f"  SKIP {meta['id']} (status=disabled)")
-                skip += 1
-                continue
-            workflow_db.upsert_workflow(conn, meta, wf_config)
-            click.echo(f"  OK   {meta['id']}")
-            ok += 1
-        except FileNotFoundError as exc:
-            click.echo(f"  SKIP {yf.name}: {exc}", err=True)
-            skip += 1
-
-    # phase 2 — import orphan JSON files (no matching meta)
-    if workflow_dir.is_dir():
-        for jf in sorted(workflow_dir.glob("*.json")):
-            stem = jf.stem
-            has_meta = (meta_path / f"{stem}_meta.yaml").exists() or (meta_path / f"{stem}.yaml").exists()
-            if has_meta:
-                continue  # already handled in phase 1
-            rel_path = str(jf.relative_to(project_root))
+    def _import_meta_dir(meta_path: Path, wf_dir: Path, label: str) -> None:
+        nonlocal ok, skip
+        if not meta_path.is_dir():
+            return
+        for yf in sorted(meta_path.glob("*.yaml")):
+            rel_path = str(yf.relative_to(project_root))
             try:
-                meta, wf_config = workflow_db.load_workflow_direct(project_root, rel_path)
+                meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
                 if meta.get("status") == "disabled":
                     click.echo(f"  SKIP {meta['id']} (status=disabled)")
                     skip += 1
                     continue
                 workflow_db.upsert_workflow(conn, meta, wf_config)
-                click.echo(f"  OK   {meta['id']} (no meta)")
+                click.echo(f"  OK   {meta['id']} ({label})")
                 ok += 1
             except FileNotFoundError as exc:
-                click.echo(f"  SKIP {jf.name}: {exc}", err=True)
+                click.echo(f"  SKIP {yf.name}: {exc}", err=True)
                 skip += 1
+
+        # import orphan JSON files (no matching meta)
+        if wf_dir.is_dir():
+            for jf in sorted(wf_dir.glob("*.json")):
+                stem = jf.stem
+                has_meta = (meta_path / f"{stem}_meta.yaml").exists() or (meta_path / f"{stem}.yaml").exists()
+                if has_meta:
+                    continue
+                rel_path = str(jf.relative_to(project_root))
+                try:
+                    meta, wf_config = workflow_db.load_workflow_direct(project_root, rel_path)
+                    if meta.get("status") == "disabled":
+                        click.echo(f"  SKIP {meta['id']} (status=disabled)")
+                        skip += 1
+                        continue
+                    workflow_db.upsert_workflow(conn, meta, wf_config)
+                    click.echo(f"  OK   {meta['id']} (no meta, {label})")
+                    ok += 1
+                except FileNotFoundError as exc:
+                    click.echo(f"  SKIP {jf.name}: {exc}", err=True)
+                    skip += 1
+
+    # phase 1 — default data first
+    _import_meta_dir(default_meta, default_wf_dir, "default")
+
+    # phase 2 — non-default data second (can override defaults)
+    _import_meta_dir(user_meta, user_wf_dir, "user")
 
     conn.commit()
     conn.close()
