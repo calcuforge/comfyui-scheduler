@@ -1,3 +1,4 @@
 .idea
 db/workflows.db-shm
 db/workflows.db-wal
+data/dev_default_nodes.yaml
