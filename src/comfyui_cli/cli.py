@@ -14,6 +14,7 @@ import yaml
 from .api import ComfyUIApi
 from .exceptions import ComfyUICLIError, NodeNotFoundError
 from .executor import run as executor_run
+from . import node_db
 from . import node_manager
 from . import workflow_db
 
@@ -101,21 +102,22 @@ def node_import(config_files: tuple[str, ...]) -> None:
             continue
 
         with open(path, "r", encoding="utf-8") as fh:
-            nodes = yaml.safe_load(fh)
+            entries = yaml.safe_load(fh)
 
-        if not nodes:
+        if not entries:
             continue
 
-        for entry in nodes:
+        for entry in entries:
             url = entry.get("url", "").strip()
             if not url:
                 continue
             try:
-                node_manager.add_node(
+                node_db.add_node(
                     url=url,
                     user=entry.get("user", ""),
                     password=entry.get("password", ""),
                     name=entry.get("name", ""),
+                    blocking=entry.get("blocking", True),
                 )
                 click.echo(f"  OK   {entry.get('name') or url}")
                 ok += 1
