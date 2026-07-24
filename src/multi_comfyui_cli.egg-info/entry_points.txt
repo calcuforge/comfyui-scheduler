@@ -1,0 +1,2 @@
+[console_scripts]
+multi-comfyui-cli = comfyui_cli.cli:main

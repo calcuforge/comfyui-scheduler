@@ -1,20 +1,12 @@
 #!/usr/bin/env python3
-"""
-Batch-import all meta YAML files from the meta directory into the workflow table.
-
-Usage::
-
-    python src/tool/init_workflow_db_batch.py [meta_dir]
-
-If *meta_dir* is omitted, ``data/default_workflows/meta`` is used.
-"""
+"""Thin wrapper — prefer ``multi-comfyui-cli workflow import-all``."""
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-from init_workflow_db import (
+from comfyui_cli.workflow_db import (
     ensure_db,
     find_project_root,
     get_connection,
@@ -57,7 +49,6 @@ def main(meta_dir_rel: str) -> None:
 
     conn.commit()
     conn.close()
-
     print(f"\nDone — {ok} upserted, {skip} skipped → {db_path}")
 
 

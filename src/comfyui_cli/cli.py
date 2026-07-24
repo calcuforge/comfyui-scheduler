@@ -1,11 +1,12 @@
 """
-CLI entry point — ``multi-multi-comfyui-cli`` command.
+CLI entry point — ``multi-comfyui-cli`` command.
 """
 
 from __future__ import annotations
 
 import json
 import sys
+from pathlib import Path
 
 import click
 
@@ -13,10 +14,11 @@ from .api import ComfyUIApi
 from .exceptions import ComfyUICLIError, NodeNotFoundError
 from .executor import run as executor_run
 from . import node_manager
+from . import workflow_db
 
 
 @click.group()
-@click.version_option(version="1.0.0", prog_name="multi-multi-comfyui-cli")
+@click.version_option(version="1.0.0", prog_name="multi-comfyui-cli")
 def main() -> None:
     """ComfyUI CLI — run workflows on remote ComfyUI nodes from the command line."""
 
@@ -175,6 +177,132 @@ def status_cmd(url: str) -> None:
             name = nd["name"]
             api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
             _print_node_status(name, api)
+
+
+# ═══════════════════════════════════════════════════════════════════
+#  workflow  group
+# ═══════════════════════════════════════════════════════════════════
+
+@main.group()
+def workflow() -> None:
+    """Manage workflow configurations in the local database."""
+
+
+@workflow.command("import")
+@click.argument("meta_file", type=click.Path(exists=True))
+def workflow_import(meta_file: str) -> None:
+    """Import a single workflow from a meta YAML file."""
+    project_root = workflow_db.find_project_root(Path.cwd())
+    meta, wf_config = workflow_db.load_meta_and_workflow(project_root, meta_file)
+    db_path = workflow_db.ensure_db(project_root)
+    conn = workflow_db.get_connection(db_path)
+    workflow_db.upsert_workflow(conn, meta, wf_config)
+    conn.commit()
+    conn.close()
+    click.echo(f"OK — upserted workflow '{meta['id']}'")
+
+
+@workflow.command("import-all")
+@click.option(
+    "--meta-dir", "-d",
+    default="data/default_workflows/meta",
+    help="Path to the meta YAML directory.",
+)
+def workflow_import_all(meta_dir: str) -> None:
+    """Batch-import all meta YAML files from a directory."""
+    project_root = workflow_db.find_project_root(Path.cwd())
+    meta_path = project_root / meta_dir
+
+    if not meta_path.is_dir():
+        raise click.ClickException(f"Meta directory not found: {meta_path}")
+
+    yaml_files = sorted(meta_path.glob("*.yaml"))
+    if not yaml_files:
+        click.echo(f"No .yaml files found in {meta_path}")
+        return
+
+    db_path = workflow_db.ensure_db(project_root)
+    conn = workflow_db.get_connection(db_path)
+
+    ok = skip = 0
+    for yf in yaml_files:
+        rel_path = str(yf.relative_to(project_root))
+        try:
+            meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
+            if meta.get("status") == "disabled":
+                click.echo(f"  SKIP {meta['id']} (status=disabled)")
+                skip += 1
+                continue
+            workflow_db.upsert_workflow(conn, meta, wf_config)
+            click.echo(f"  OK   {meta['id']}")
+            ok += 1
+        except FileNotFoundError as exc:
+            click.echo(f"  SKIP {yf.name}: {exc}", err=True)
+            skip += 1
+
+    conn.commit()
+    conn.close()
+    click.echo(f"\nDone — {ok} upserted, {skip} skipped")
+
+
+@workflow.command("doc")
+def workflow_doc() -> None:
+    """Generate doc/workflow.md from the workflow table."""
+    project_root = workflow_db.find_project_root(Path.cwd())
+    db_path = workflow_db.ensure_db(project_root)
+    conn = workflow_db.get_connection(db_path)
+
+    rows = conn.execute(
+        """
+        SELECT id, type, purpose, output_type, input_node_mapping
+        FROM workflow
+        ORDER BY id
+        """
+    ).fetchall()
+    conn.close()
+
+    lines: list[str] = [
+        "# Workflow List",
+        "",
+        "## Summary",
+        "",
+        "| ID | Type | Purpose | Output |",
+        "|----|------|---------|--------|",
+    ]
+
+    for row in rows:
+        id_, type_, purpose, output_type, mapping_json = row
+        mapping = json.loads(mapping_json)
+        lines.append(f"| {id_} | {type_} | {purpose} | {output_type} |")
+
+    lines.extend(["", "## Input Fields", ""])
+
+    for row in rows:
+        id_, type_, purpose, output_type, mapping_json = row
+        lines.append(f"### {id_}")
+        lines.append("")
+        mapping = json.loads(mapping_json)
+        if not mapping:
+            lines.append("(no inputs)")
+        else:
+            items = sorted(
+                mapping.items(),
+                key=lambda kv: (not kv[1].get("required"), kv[0]),
+            )
+            lines.append("| Field | Type | Required | Description |")
+            lines.append("|-------|------|----------|-------------|")
+            for name, info in items:
+                vt = info.get("value_type", "?")
+                req = "yes" if info.get("required") else "no"
+                desc = info.get("description", "").replace("|", "\\|").replace("\n", " ")
+                lines.append(f"| `{name}` | {vt} | {req} | {desc} |")
+        lines.append("")
+
+    doc_dir = project_root / "doc"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+    doc_path = doc_dir / "workflow.md"
+    doc_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    click.echo(f"OK — wrote {len(rows)} workflows to {doc_path}")
 
 
 def _print_node_status(label: str, api: ComfyUIApi) -> None:
