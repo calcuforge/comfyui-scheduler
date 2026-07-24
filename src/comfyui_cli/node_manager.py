@@ -41,7 +41,7 @@ def clear_nodes() -> None:
     _clear_nodes()
 
 
-def select_node() -> ComfyUIApi:
+def select_node(task_id: str = "") -> ComfyUIApi:
     """Select a node with scheduling logic.
 
     Rules (in priority order):
@@ -61,7 +61,7 @@ def select_node() -> ComfyUIApi:
         reachable = 0
 
         for nd in nodes:
-            api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
+            api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""), task_id=task_id)
             try:
                 q = api.get_queue()
                 running = len(q.get("queue_running", []))
@@ -101,6 +101,6 @@ def select_node() -> ComfyUIApi:
         time.sleep(5)
 
 
-def to_api(node: dict[str, Any]) -> ComfyUIApi:
+def to_api(node: dict[str, Any], task_id: str = "") -> ComfyUIApi:
     """Create an API client from a stored node dict."""
-    return ComfyUIApi(node["url"], node.get("user", ""), node.get("password", ""))
+    return ComfyUIApi(node["url"], node.get("user", ""), node.get("password", ""), task_id=task_id)

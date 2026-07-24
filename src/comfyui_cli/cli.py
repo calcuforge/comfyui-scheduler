@@ -5,6 +5,7 @@ CLI entry point — ``multi-comfyui-cli`` command.
 from __future__ import annotations
 
 import json
+import uuid
 from pathlib import Path
 
 import click
@@ -270,14 +271,15 @@ def run_cmd(
         output.debug(f"[auto] {len(nodes)} node(s) registered.")
 
     # -- resolve node -------------------------------------------------------
+    task_id = str(uuid.uuid4())
     try:
         if node_id:
             target = next((n for n in nodes if n["id"] == node_id), None)
             if not target:
                 output.error(f"Node not found: {node_id}")
-            api = node_manager.to_api(target)
+            api = node_manager.to_api(target, task_id=task_id)
         else:
-            api = node_manager.select_node()
+            api = node_manager.select_node(task_id=task_id)
     except node_db.NodeNotFoundError as exc:
         output.error(str(exc))
 
@@ -297,6 +299,7 @@ def run_cmd(
         f"Workflow completed — {len(result['files'])} file(s)",
         {
             "workflow_id": workflow_id,
+            "task_id": task_id,
             "prompt_id": result["prompt_id"],
             "output_type": output_type,
             "files": result["files"],

@@ -26,9 +26,17 @@ class ComfyUIApi:
         url: str = "http://127.0.0.1:8188",
         user: str = "",
         password: str = "",
+        task_id: str = "",
     ) -> None:
         self.url = url.rstrip("/")
         self.auth = HTTPBasicAuth(user, password) if user else None
+        self.task_id = task_id
+
+        self._session = requests.Session()
+        if task_id:
+            self._session.headers["Host-Task-ID"] = task_id
+        if self.auth:
+            self._session.auth = self.auth
 
         host = self.url.split("//", 1)[-1]
         ws_protocol = "wss" if self.url.startswith("https") else "ws"
@@ -43,7 +51,7 @@ class ComfyUIApi:
         payload = {"prompt": prompt}
         if client_id:
             payload["client_id"] = client_id
-        r = requests.post(
+        r = self._session.post(
             urljoin(self.url, "/prompt"),
             data=json.dumps(payload).encode("utf-8"),
             auth=self.auth,
@@ -53,19 +61,19 @@ class ComfyUIApi:
         return r.json()
 
     def get_history(self, prompt_id: str) -> dict:
-        r = requests.get(urljoin(self.url, f"/history/{prompt_id}"), auth=self.auth)
+        r = self._session.get(urljoin(self.url, f"/history/{prompt_id}"))
         if r.status_code != 200:
             raise ComfyUICLIError(f"GET /history failed ({r.status_code}): {r.reason}")
         return r.json()
 
     def get_queue(self) -> dict:
-        r = requests.get(urljoin(self.url, "/queue"), auth=self.auth)
+        r = self._session.get(urljoin(self.url, "/queue"))
         if r.status_code != 200:
             raise ComfyUICLIError(f"GET /queue failed ({r.status_code}): {r.reason}")
         return r.json()
 
     def get_system_stats(self) -> dict:
-        r = requests.get(urljoin(self.url, "/system_stats"), auth=self.auth)
+        r = self._session.get(urljoin(self.url, "/system_stats"))
         if r.status_code != 200:
             raise ComfyUICLIError(f"GET /system_stats failed ({r.status_code}): {r.reason}")
         return r.json()
@@ -90,12 +98,11 @@ class ComfyUIApi:
 
         url = urljoin(self.url, endpoint)
         with open(filepath, "rb") as f:
-            r = requests.post(
+            r = self._session.post(
                 url,
                 files={"image": (basename, f)},
                 data={"subfolder": subfolder},
-                auth=self.auth,
-            )
+                )
         if r.status_code != 200:
             raise ComfyUICLIError(
                 f"Upload failed ({r.status_code}): {r.reason} — {r.text}"
@@ -107,7 +114,7 @@ class ComfyUIApi:
     ) -> bytes:
         params = {"filename": filename, "subfolder": subfolder, "type": folder_type}
         url = urljoin(self.url, f"/view?{urlencode(params)}")
-        r = requests.get(url, auth=self.auth)
+        r = self._session.get(url)
         if r.status_code != 200:
             raise ComfyUICLIError(f"Download failed ({r.status_code}): {r.reason}")
         return r.content
