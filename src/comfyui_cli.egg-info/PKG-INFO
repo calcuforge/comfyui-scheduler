@@ -1,5 +1,5 @@
 Metadata-Version: 2.4
-Name: comfyui-cli
+Name: multi-comfyui-cli
 Version: 1.0.0
 Summary: Command-line tool for interacting with remote ComfyUI nodes
 Requires-Python: >=3.10

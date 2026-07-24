@@ -11,7 +11,7 @@ from typing import Any
 from .api import ComfyUIApi
 from .exceptions import NodeNotFoundError
 
-APP_DIR = Path.home() / ".comfyui-cli"
+APP_DIR = Path.home() / ".multi-multi-comfyui-cli"
 NODES_FILE = APP_DIR / "nodes.json"
 
 
@@ -75,7 +75,7 @@ def select_node() -> ComfyUIApi:
     nodes = _load_nodes()
     if not nodes:
         raise NodeNotFoundError(
-            "No nodes registered.  Use 'comfyui-cli node add --url URL' first."
+            "No nodes registered.  Use 'multi-comfyui-cli node add --url URL' first."
         )
 
     best: ComfyUIApi | None = None

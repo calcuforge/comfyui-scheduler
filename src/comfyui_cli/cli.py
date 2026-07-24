@@ -1,5 +1,5 @@
 """
-CLI entry point — ``comfyui-cli`` command.
+CLI entry point — ``multi-multi-comfyui-cli`` command.
 """
 
 from __future__ import annotations
@@ -16,7 +16,7 @@ from . import node_manager
 
 
 @click.group()
-@click.version_option(version="1.0.0", prog_name="comfyui-cli")
+@click.version_option(version="1.0.0", prog_name="multi-multi-comfyui-cli")
 def main() -> None:
     """ComfyUI CLI — run workflows on remote ComfyUI nodes from the command line."""
 
@@ -109,14 +109,14 @@ def run_cmd(
     is selected automatically).  Credentials are taken from the stored
     node configuration — register nodes first with:
 
-        comfyui-cli node add --url URL [--user USER --password PASS]
+        multi-comfyui-cli node add --url URL [--user USER --password PASS]
 
     \b
     Examples:
-      comfyui-cli run -w workflow.json
-      comfyui-cli run -w workflow.json -i '[{"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"}]'
-      comfyui-cli run -w workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
-      comfyui-cli run -w workflow.json --output-node "Save Image"
+      multi-comfyui-cli run -w workflow.json
+      multi-comfyui-cli run -w workflow.json -i '[{"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"}]'
+      multi-comfyui-cli run -w workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
+      multi-comfyui-cli run -w workflow.json --output-node "Save Image"
     """
     try:
         inputs_data = json.loads(inputs)

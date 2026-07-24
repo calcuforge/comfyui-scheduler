@@ -1,5 +1,5 @@
 [project]
-name = "comfyui-cli"
+name = "multi-comfyui-cli"
 version = "1.0.0"
 description = "Command-line tool for interacting with remote ComfyUI nodes"
 requires-python = ">=3.10"
@@ -10,7 +10,7 @@ dependencies = [
 ]
 
 [project.scripts]
-comfyui-cli = "comfyui_cli.cli:main"
+multi-comfyui-cli = "comfyui_cli.cli:main"
 
 [build-system]
 requires = ["setuptools>=68.0"]
