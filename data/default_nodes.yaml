@@ -1,3 +1,4 @@
 - url: "http://127.0.0.1:8188"
   user: ""
   password: ""
+  blocking: true
