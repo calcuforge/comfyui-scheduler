@@ -485,6 +485,11 @@ def workflow_doc() -> None:
                 lines.append(f"| `{name}` | {vt} | {req} | {desc} |")
         lines.append("")
 
+    # Append static extra content if present
+    extra_path = project_root / "doc" / "workflow.extra.md"
+    if extra_path.exists():
+        lines.append(extra_path.read_text(encoding="utf-8").rstrip("\n"))
+
     doc_dir = project_root / "doc"
     doc_dir.mkdir(parents=True, exist_ok=True)
     doc_path = doc_dir / "workflow.md"
