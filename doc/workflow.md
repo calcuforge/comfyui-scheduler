@@ -6,6 +6,7 @@
 |----|------|---------|--------|
 | index_tts_2 | text_to_speech | text-to-speech requests | audio |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
+| ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen3_tts_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
 | wan2.2_svi2pro_vbvr_int8 | image-to-video | image-to-video requests | video |
@@ -26,6 +27,15 @@
 |-------|------|----------|-------------|
 | `magnification` | int | yes | magnification |
 | `video_file` | file | yes | Source video that needs to be enlarged |
+
+### ominivoice_voice_design
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `voice_instruct` | string | yes | Voice Instruct |
+| `content` | string | no | Audio text content |
+| `seed` | int | no | Random seed |
+| `speed` | float | no | Speed |
 
 ### qwen3_tts_voice_design
 
@@ -152,3 +162,28 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
   }
 }
 ```
+
+## ominivoice_voice_design 
+
+### Voice Instruct 
+Voice attributes,comma-separated or full-width comma-separated.e.g:male,indian accent And 男，河南话.The generated language depends on the language of the input "Voice Instruct"
+
+| Category | Valid Values |
+| :--- | :--- |
+| Gender | 男, 女 |
+| Age | 儿童, 少年, 青年, 中年, 老年 |
+| Dialect | 四川话, 东北话, 陕西话, 河南话, 云南话, 贵州话, 甘肃话, 宁夏话, 石家庄话, 济南话, 青岛话, 桂林话 |
+| Pitch | 极低音调, 低音调, 中音调, 高音调, 极高音调 |
+| Style | 耳语 |
+
+| Category | Valid Values |
+| :--- | :--- |
+| Gender | male, female |
+| Age | child, young adult, teenager, middle-aged, elderly |
+| Accent | american accent, british accent, australian accent, canadian accent, chinese accent, indian accent, japanese accent, korean accent, portuguese accent, russian accent |
+| Pitch | very low pitch, low pitch, moderate pitch, high pitch, very high pitch |
+| Style | whisper |
+
+### Speed
+Speaking speed factor
+`>1.0 = faster, <1.0 = slower`
