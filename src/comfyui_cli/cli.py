@@ -130,10 +130,20 @@ def node_import(config_files: tuple[str, ...]) -> None:
 
 @main.command("run")
 @click.option(
-    "--workflow", "-w",
-    required=True,
+    "--workflow-id", "-w",
+    default=None,
+    help="Workflow id from the database (use 'multi-comfyui-cli workflow doc' to list).",
+)
+@click.option(
+    "--workflow-file", "-f",
+    default=None,
     type=click.Path(exists=True),
-    help="Path to the ComfyUI API-format workflow JSON file.",
+    help="Path to a workflow JSON file (when not using --workflow-id).",
+)
+@click.option(
+    "--node", "-n", "node_id",
+    default=None,
+    help="Node id to use (default: auto-select least busy node).",
 )
 @click.option(
     "--inputs", "-i",
@@ -149,49 +159,84 @@ def node_import(config_files: tuple[str, ...]) -> None:
     help="_meta.title of the output node (default: last node in workflow).",
 )
 def run_cmd(
-    workflow: str,
+    workflow_id: str | None,
+    workflow_file: str | None,
+    node_id: str | None,
     inputs: str,
     output_node: str | None,
 ) -> None:
-    """Execute a workflow on a ComfyUI node.
+    """Execute a workflow on a ComfyUI node."""
+    if not workflow_id and not workflow_file:
+        raise click.UsageError("Either --workflow-id or --workflow-file is required.")
 
-    Uses locally registered nodes with load balancing (least busy node
-    is selected automatically).  Credentials are taken from the stored
-    node configuration — register nodes first with:
+    # -- resolve workflow --------------------------------------------------
+    project_root = workflow_db.find_project_root(Path.cwd())
+    if workflow_id:
+        db_path = workflow_db.ensure_db(project_root)
+        conn = workflow_db.get_connection(db_path)
+        row = conn.execute(
+            "SELECT workflow_config, input_node_mapping FROM workflow WHERE id = ?",
+            (workflow_id,),
+        ).fetchone()
+        conn.close()
+        if not row:
+            raise click.ClickException(f"Workflow not found: {workflow_id}")
+        workflow_config = json.loads(row[0])
+        mapping = json.loads(row[1])
+    else:
+        with open(project_root / workflow_file, "r", encoding="utf-8") as fh:
+            workflow_config = json.load(fh)
+        mapping = {}
 
-        multi-comfyui-cli node add --url URL [--user USER --password PASS]
-
-    \b
-    Examples:
-      multi-comfyui-cli run -w workflow.json
-      multi-comfyui-cli run -w workflow.json -i '[{"type":"file","value":"./input.png","node_title":"Load Image","node_field":"image"}]'
-      multi-comfyui-cli run -w workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
-      multi-comfyui-cli run -w workflow.json --output-node "Save Image"
-    """
+    # -- parse inputs (with mapping support) --------------------------------
     try:
-        inputs_data = json.loads(inputs)
+        inputs_data: list[dict] = json.loads(inputs)
     except json.JSONDecodeError as exc:
         raise click.ClickException(f"Invalid JSON for --inputs: {exc}")
 
     if not isinstance(inputs_data, list):
         raise click.ClickException("--inputs must be a JSON array")
 
+    resolved_inputs: list[dict] = []
     for i, item in enumerate(inputs_data):
+        # shortcut: {"field_name": value} → resolve via mapping
+        if isinstance(item, dict) and len(item) == 1:
+            key = next(iter(item))
+            if key in mapping:
+                info = mapping[key]
+                resolved_inputs.append({
+                    "type": "file" if info["value_type"] == "file" else "string",
+                    "value": str(item[key]),
+                    "node_title": info["node_meta_title"],
+                    "node_field": info["node_input_field"],
+                })
+                continue
+
         if not isinstance(item, dict):
             raise click.ClickException(f"--inputs[{i}] must be an object")
         for key in ("type", "value", "node_title", "node_field"):
             if key not in item:
                 raise click.ClickException(f"--inputs[{i}] missing required field '{key}'")
         if item["type"] not in ("string", "file"):
-            raise click.ClickException(f"--inputs[{i}].type must be 'string' or 'file', got '{item['type']}'")
+            raise click.ClickException(f"--inputs[{i}].type must be 'string' or 'file'")
+        resolved_inputs.append(item)
 
-    api = node_manager.select_node()
+    # -- resolve node -------------------------------------------------------
+    if node_id:
+        nodes = node_db.list_nodes()
+        target = next((n for n in nodes if n["id"] == node_id), None)
+        if not target:
+            raise click.ClickException(f"Node not found: {node_id}")
+        api = node_manager.to_api(target)
+    else:
+        api = node_manager.select_node()
 
+    # -- execute ------------------------------------------------------------
     try:
         rc = executor_run(
-            workflow_path=workflow,
+            workflow_source=workflow_config,
             api=api,
-            inputs=inputs_data,
+            inputs=resolved_inputs,
             output_node_title=output_node,
         )
     except ComfyUICLIError as exc:

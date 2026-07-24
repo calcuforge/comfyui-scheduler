@@ -24,10 +24,17 @@ class Workflow(dict):
     the ComfyUI UI) rather than by numeric node ID.
     """
 
-    def __init__(self, path: str | Path) -> None:
-        raw = Path(path).read_text(encoding="utf-8")
-        super().__init__(json.loads(raw))
-        self._source = Path(path)
+    def __init__(self, path: str | Path | None = None, *, config: dict | None = None) -> None:
+        if config is not None:
+            super().__init__(config)
+            self._source = None
+        elif path is not None:
+            raw = Path(path).read_text(encoding="utf-8")
+            super().__init__(json.loads(raw))
+            self._source = Path(path)
+        else:
+            super().__init__()
+            self._source = None
 
     # ── node look-up ──────────────────────────────────────────────
 

@@ -26,18 +26,18 @@ class InputItem:
 
 
 def run(
-    workflow_path: str | Path,
+    workflow_source: str | Path | dict,
     api: ComfyUIApi,
     *,
     inputs: list[dict] | None = None,
     output_node_title: str | None = None,
 ) -> int:
-    """Execute *workflow_path* on *api*, blocking until completion.
+    """Execute a workflow on *api*, blocking until completion.
 
     Parameters
     ----------
-    workflow_path:
-        Path to a ComfyUI API-format JSON workflow file.
+    workflow_source:
+        Either a path to a ComfyUI API-format JSON file, or a workflow dict.
     api:
         *ComfyUIApi* client pointing at the target node.
     inputs:
@@ -55,10 +55,13 @@ def run(
     0 on success, 1 on failure.
     """
     # 1. Load workflow
-    wf_path = Path(workflow_path)
-    if not wf_path.exists():
-        raise WorkflowError(f"Workflow file not found: {wf_path}")
-    wf = Workflow(wf_path)
+    if isinstance(workflow_source, dict):
+        wf = Workflow(config=workflow_source)
+    else:
+        wf_path = Path(workflow_source)
+        if not wf_path.exists():
+            raise WorkflowError(f"Workflow file not found: {wf_path}")
+        wf = Workflow(wf_path)
 
     # 2. Apply inputs
     for item in (inputs or []):
