@@ -9,6 +9,7 @@ import sys
 from pathlib import Path
 
 import click
+import yaml
 
 from .api import ComfyUIApi
 from .exceptions import ComfyUICLIError, NodeNotFoundError
@@ -74,6 +75,55 @@ def node_clear() -> None:
     """Remove all registered nodes."""
     node_manager.clear_nodes()
     click.echo("All nodes removed.")
+
+
+@node.command("import")
+@click.argument("config_files", nargs=-1, type=click.Path(exists=True))
+def node_import(config_files: tuple[str, ...]) -> None:
+    """Import nodes from YAML config files.
+
+    If no files are given, defaults to data/default_nodes.yaml and data/nodes.yaml.
+    """
+    if not config_files:
+        config_files = (
+            "data/default_nodes.yaml",
+            "data/nodes.yaml",
+        )
+
+    project_root = workflow_db.find_project_root(Path.cwd())
+    ok = skip = 0
+
+    for cf in config_files:
+        path = project_root / cf
+        if not path.exists():
+            click.echo(f"  SKIP {cf} (not found)", err=True)
+            skip += 1
+            continue
+
+        with open(path, "r", encoding="utf-8") as fh:
+            nodes = yaml.safe_load(fh)
+
+        if not nodes:
+            continue
+
+        for entry in nodes:
+            url = entry.get("url", "").strip()
+            if not url:
+                continue
+            try:
+                node_manager.add_node(
+                    url=url,
+                    user=entry.get("user", ""),
+                    password=entry.get("password", ""),
+                    name=entry.get("name", ""),
+                )
+                click.echo(f"  OK   {entry.get('name') or url}")
+                ok += 1
+            except ValueError:
+                click.echo(f"  SKIP {url} (already registered)")
+                skip += 1
+
+    click.echo(f"\nDone — {ok} imported, {skip} skipped")
 
 
 # ═══════════════════════════════════════════════════════════════════

@@ -11,7 +11,7 @@ from typing import Any
 from .api import ComfyUIApi
 from .exceptions import NodeNotFoundError
 
-APP_DIR = Path.home() / ".multi-multi-comfyui-cli"
+APP_DIR = Path.home() / ".multi-comfyui-cli"
 NODES_FILE = APP_DIR / "nodes.json"
 
 
