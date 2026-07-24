@@ -9,7 +9,7 @@ input_node_mapping:
     description: magnification
     node_input_field: "resize_type.scale"
     node_meta_title: "RTX Video Super Resolution"
-    value_type: int
+    value_type: float
     required: true
   video_file:
     description: Source video that needs to be enlarged

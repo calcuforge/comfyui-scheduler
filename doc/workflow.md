@@ -25,7 +25,7 @@
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `magnification` | int | yes | magnification |
+| `magnification` | float | yes | magnification |
 | `video_file` | file | yes | Source video that needs to be enlarged |
 
 ### ominivoice_voice_design
