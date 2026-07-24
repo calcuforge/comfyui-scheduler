@@ -169,8 +169,32 @@ def run_cmd(
     if not workflow_id and not workflow_file:
         raise click.UsageError("Either --workflow-id or --workflow-file is required.")
 
-    # -- resolve workflow --------------------------------------------------
+    # -- auto-import workflows if none exist ---------------------------------
     project_root = workflow_db.find_project_root(Path.cwd())
+    db_path = workflow_db.ensure_db(project_root)
+    conn = workflow_db.get_connection(db_path)
+    count = conn.execute("SELECT COUNT(*) FROM workflow").fetchone()[0]
+    conn.close()
+    if count == 0:
+        click.echo("[auto] No workflows in database — running workflow import-all...")
+        meta_path = project_root / "data" / "default_workflows" / "meta"
+        yaml_files = sorted(meta_path.glob("*.yaml")) if meta_path.is_dir() else []
+        db_path = workflow_db.ensure_db(project_root)
+        conn = workflow_db.get_connection(db_path)
+        for yf in yaml_files:
+            rel_path = str(yf.relative_to(project_root))
+            try:
+                meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
+                if meta.get("status") == "disabled":
+                    continue
+                workflow_db.upsert_workflow(conn, meta, wf_config)
+            except FileNotFoundError:
+                pass
+        conn.commit()
+        conn.close()
+        click.echo(f"[auto] Imported {len(yaml_files)} workflow(s).")
+
+    # -- resolve workflow --------------------------------------------------
     if workflow_id:
         db_path = workflow_db.ensure_db(project_root)
         conn = workflow_db.get_connection(db_path)
@@ -221,9 +245,47 @@ def run_cmd(
             raise click.ClickException(f"--inputs[{i}].type must be 'string' or 'file'")
         resolved_inputs.append(item)
 
+    # -- auto-register local node if none exist -----------------------------
+    nodes = node_db.list_nodes()
+    if not nodes:
+        import requests as _requests
+        local_url = "http://127.0.0.1:8188"
+        try:
+            _r = _requests.get(f"{local_url}/system_stats", timeout=3)
+            _r.raise_for_status()
+        except Exception:
+            raise click.ClickException(
+                "No nodes registered and no local ComfyUI detected at 127.0.0.1:8188.\n"
+                "Register a node first: multi-comfyui-cli node import"
+            )
+
+        click.echo(f"[auto] Local ComfyUI detected at {local_url} — running node import...")
+        # Import default node configs with local URL overridden
+        for config_path in ("data/default_nodes.yaml", "data/nodes.yaml"):
+            path = project_root / config_path
+            if not path.exists():
+                continue
+            with open(path, "r", encoding="utf-8") as fh:
+                entries = yaml.safe_load(fh)
+            if not entries:
+                continue
+            for entry in entries:
+                nid = entry.get("id", "").strip()
+                if not nid:
+                    continue
+                node_db.add_node(
+                    node_id=nid,
+                    url=entry.get("url", local_url).strip() or local_url,
+                    user=entry.get("user", ""),
+                    password=entry.get("password", ""),
+                    name=entry.get("name", ""),
+                    blocking=entry.get("blocking", True),
+                )
+        nodes = node_db.list_nodes()
+        click.echo(f"[auto] {len(nodes)} node(s) registered.")
+
     # -- resolve node -------------------------------------------------------
     if node_id:
-        nodes = node_db.list_nodes()
         target = next((n for n in nodes if n["id"] == node_id), None)
         if not target:
             raise click.ClickException(f"Node not found: {node_id}")
