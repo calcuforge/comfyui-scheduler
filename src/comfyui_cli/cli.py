@@ -511,7 +511,7 @@ def workflow_doc() -> None:
         lines.append("")
 
     # Append static extra content if present
-    extra_path = project_root / "doc" / "workflow.extra.md"
+    extra_path = project_root / "doc" / "workflow.extra.md.tpl"
     if extra_path.exists():
         lines.append(extra_path.read_text(encoding="utf-8").rstrip("\n"))
 
