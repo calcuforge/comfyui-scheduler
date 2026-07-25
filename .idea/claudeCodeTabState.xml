@@ -7,8 +7,6 @@
           <value>
             <TabSessionState>
               <option name="provider" value="claude" />
-              <option name="sessionId" value="9984c64b-02e7-4526-b454-114f8e8ecb8a" />
-              <option name="cwd" value="C:\Users\anson\dev\video-creation\multi-comfyui-cli" />
               <option name="model" value="claude-sonnet-4-6[1m]" />
               <option name="permissionMode" value="default" />
             </TabSessionState>

@@ -1,0 +1,466 @@
+{
+  "38": {
+    "inputs": {
+      "filename_prefix": "video/LTX23",
+      "format": "mp4",
+      "codec": "auto",
+      "video-preview": "",
+      "video": [
+        "50:36",
+        0
+      ]
+    },
+    "class_type": "SaveVideo",
+    "_meta": {
+      "title": "保存视频"
+    }
+  },
+  "61": {
+    "inputs": {
+      "Number": "24.0"
+    },
+    "class_type": "Float",
+    "_meta": {
+      "title": "fps"
+    }
+  },
+  "62": {
+    "inputs": {
+      "Number": "10"
+    },
+    "class_type": "Int",
+    "_meta": {
+      "title": "length"
+    }
+  },
+  "63": {
+    "inputs": {
+      "expression": "a*b+1",
+      "values.a": [
+        "61",
+        0
+      ],
+      "values.b": [
+        "62",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "50:14": {
+    "inputs": {
+      "width": [
+        "50:9",
+        0
+      ],
+      "height": [
+        "50:9",
+        1
+      ],
+      "length": [
+        "50:10",
+        0
+      ],
+      "batch_size": 1
+    },
+    "class_type": "EmptyLTXVLatentVideo",
+    "_meta": {
+      "title": "空Latent视频（LTXV）"
+    }
+  },
+  "50:13": {
+    "inputs": {
+      "frames_number": [
+        "50:10",
+        0
+      ],
+      "frame_rate": [
+        "50:54",
+        0
+      ],
+      "batch_size": 1,
+      "audio_vae": [
+        "50:1",
+        0
+      ]
+    },
+    "class_type": "LTXVEmptyLatentAudio",
+    "_meta": {
+      "title": "LTXV 空音频潜空间"
+    }
+  },
+  "50:1": {
+    "inputs": {
+      "vae_name": "ltx-2.3-22b-dev_audio_vae.safetensors",
+      "device": "main_device",
+      "weight_dtype": "bf16"
+    },
+    "class_type": "VAELoaderKJ",
+    "_meta": {
+      "title": "VAELoader KJ"
+    }
+  },
+  "50:2": {
+    "inputs": {
+      "vae_name": "ltx-2.3-22b-dev_video_vae.safetensors",
+      "device": "main_device",
+      "weight_dtype": "bf16"
+    },
+    "class_type": "VAELoaderKJ",
+    "_meta": {
+      "title": "VAELoader KJ"
+    }
+  },
+  "50:15": {
+    "inputs": {
+      "video_latent": [
+        "50:14",
+        0
+      ],
+      "audio_latent": [
+        "50:13",
+        0
+      ]
+    },
+    "class_type": "LTXVConcatAVLatent",
+    "_meta": {
+      "title": "LTXVConcatAVLatent"
+    }
+  },
+  "50:16": {
+    "inputs": {
+      "noise_seed": 571473492121791
+    },
+    "class_type": "RandomNoise",
+    "_meta": {
+      "title": "随机噪波"
+    }
+  },
+  "50:17": {
+    "inputs": {
+      "noise": [
+        "50:16",
+        0
+      ],
+      "guider": [
+        "50:18",
+        0
+      ],
+      "sampler": [
+        "50:20",
+        0
+      ],
+      "sigmas": [
+        "50:22",
+        0
+      ],
+      "latent_image": [
+        "50:15",
+        0
+      ]
+    },
+    "class_type": "SamplerCustomAdvanced",
+    "_meta": {
+      "title": "自定义采样器（高级）"
+    }
+  },
+  "50:18": {
+    "inputs": {
+      "cfg": 1,
+      "model": [
+        "50:58",
+        0
+      ],
+      "positive": [
+        "50:23",
+        0
+      ],
+      "negative": [
+        "50:23",
+        1
+      ]
+    },
+    "class_type": "CFGGuider",
+    "_meta": {
+      "title": "CFG引导器"
+    }
+  },
+  "50:22": {
+    "inputs": {
+      "steps": 8,
+      "max_shift": 2.05,
+      "base_shift": 0.95,
+      "stretch": true,
+      "terminal": 0.1,
+      "latent": [
+        "50:15",
+        0
+      ]
+    },
+    "class_type": "LTXVScheduler",
+    "_meta": {
+      "title": "LTXV调度器"
+    }
+  },
+  "50:20": {
+    "inputs": {
+      "sampler_name": "euler_ancestral"
+    },
+    "class_type": "KSamplerSelect",
+    "_meta": {
+      "title": "K采样器选择"
+    }
+  },
+  "50:9": {
+    "inputs": {
+      "image": [
+        "50:7",
+        0
+      ]
+    },
+    "class_type": "GetImageSize",
+    "_meta": {
+      "title": "获取图像尺寸"
+    }
+  },
+  "50:36": {
+    "inputs": {
+      "fps": [
+        "50:12",
+        0
+      ],
+      "bit_depth": 8,
+      "images": [
+        "50:37",
+        0
+      ],
+      "audio": [
+        "50:35",
+        0
+      ]
+    },
+    "class_type": "CreateVideo",
+    "_meta": {
+      "title": "创建视频"
+    }
+  },
+  "50:10": {
+    "inputs": {
+      "value": [
+        "63",
+        1
+      ]
+    },
+    "class_type": "PrimitiveInt",
+    "_meta": {
+      "title": "Length"
+    }
+  },
+  "50:54": {
+    "inputs": {
+      "code_input": "# 例：把 3 个输入拼成列表后输出\noutputs[0] = inputs['In01']\noutputs[1] = inputs['In02']\noutputs[2] = inputs['In03']",
+      "file": "./res/hello.py",
+      "use_file": false,
+      "run_always": false,
+      "In01": [
+        "50:12",
+        0
+      ]
+    },
+    "class_type": "RB_Code",
+    "_meta": {
+      "title": "RB Code"
+    }
+  },
+  "50:12": {
+    "inputs": {
+      "value": [
+        "61",
+        0
+      ]
+    },
+    "class_type": "PrimitiveFloat",
+    "_meta": {
+      "title": "Frame Rate(float)"
+    }
+  },
+  "50:19": {
+    "inputs": {
+      "av_latent": [
+        "50:17",
+        0
+      ]
+    },
+    "class_type": "LTXVSeparateAVLatent",
+    "_meta": {
+      "title": "LTXV分离音视频潜空间"
+    }
+  },
+  "50:37": {
+    "inputs": {
+      "tile_size": 512,
+      "overlap": 64,
+      "temporal_size": 4096,
+      "temporal_overlap": 8,
+      "samples": [
+        "50:19",
+        0
+      ],
+      "vae": [
+        "50:2",
+        0
+      ]
+    },
+    "class_type": "VAEDecodeTiled",
+    "_meta": {
+      "title": "VAE解码（分块）"
+    }
+  },
+  "50:35": {
+    "inputs": {
+      "samples": [
+        "50:19",
+        1
+      ],
+      "audio_vae": [
+        "50:1",
+        0
+      ]
+    },
+    "class_type": "LTXVAudioVAEDecode",
+    "_meta": {
+      "title": "LTXV音频VAE解码"
+    }
+  },
+  "50:51": {
+    "inputs": {
+      "negative": "text, subtitles, caption, watermark, logo, signage, letter, word, character,"
+    },
+    "class_type": "easy negative",
+    "_meta": {
+      "title": "负面提示词"
+    }
+  },
+  "50:52": {
+    "inputs": {
+      "text": [
+        "50:51",
+        0
+      ],
+      "clip": [
+        "50:60",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "50:23": {
+    "inputs": {
+      "frame_rate": [
+        "50:12",
+        0
+      ],
+      "positive": [
+        "50:5",
+        0
+      ],
+      "negative": [
+        "50:52",
+        0
+      ]
+    },
+    "class_type": "LTXVConditioning",
+    "_meta": {
+      "title": "LTXV条件"
+    }
+  },
+  "50:58": {
+    "inputs": {
+      "nag_scale": 11,
+      "nag_alpha": 0.25,
+      "nag_tau": 2.5,
+      "inplace": true,
+      "model": [
+        "50:59",
+        0
+      ],
+      "nag_cond_video": [
+        "50:52",
+        0
+      ],
+      "nag_cond_audio": [
+        "50:52",
+        0
+      ]
+    },
+    "class_type": "LTX2_NAG",
+    "_meta": {
+      "title": "LTX2 NAG"
+    }
+  },
+  "50:5": {
+    "inputs": {
+      "text": [
+        "50:53",
+        0
+      ],
+      "clip": [
+        "50:60",
+        0
+      ]
+    },
+    "class_type": "CLIPTextEncode",
+    "_meta": {
+      "title": "CLIP文本编码"
+    }
+  },
+  "50:60": {
+    "inputs": {
+      "clip_name1": "gemma_3_12B_it_fp8_e4m3fn.safetensors",
+      "clip_name2": "ltx-2.3-22b-dev_embeddings_connectors.safetensors",
+      "type": "ltxv",
+      "device": "default"
+    },
+    "class_type": "DualCLIPLoader",
+    "_meta": {
+      "title": "双CLIP加载器"
+    }
+  },
+  "50:59": {
+    "inputs": {
+      "unet_name": "ltx-2.3-22b-distilled-1.1_transformer_only_int8_convrot.safetensors",
+      "weight_dtype": "default"
+    },
+    "class_type": "UNETLoader",
+    "_meta": {
+      "title": "UNet加载器"
+    }
+  },
+  "50:53": {
+    "inputs": {
+      "positive": "电影级广角固定镜头，从远处山腰视角拍摄，下午斜阳将雪山群峰染成金色。一架银白色大型客机从画面右侧低空飞入，机翼轻微摇摆，飞行姿态异常，高度越来越低。它径直撞向一座险峻的岩石山峰，机头最先触岩，瞬间爆出一团巨大的橙红色火球，冲击波将积雪和碎石向外推开。紧接着爆炸迅速膨胀，浓黑与灰白色浓烟翻滚升腾，形成蘑菇云形状。机身断裂成无数碎片，带着火焰如雨点般向山谷坠落，碎片拖曳着黑色尾烟。慢动作呈现，高细节写实风格，8K分辨率，自然光与火光交织，声音无需考虑，纯视觉冲击。"
+    },
+    "class_type": "easy positive",
+    "_meta": {
+      "title": "正面提示词"
+    }
+  },
+  "50:7": {
+    "inputs": {
+      "width": 1280,
+      "height": 720,
+      "batch_size": 1,
+      "color": 0
+    },
+    "class_type": "EmptyImage",
+    "_meta": {
+      "title": "空图像"
+    }
+  }
+}

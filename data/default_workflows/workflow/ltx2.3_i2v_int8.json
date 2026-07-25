@@ -23,6 +23,41 @@
       "title": "LoadImage"
     }
   },
+  "73": {
+    "inputs": {
+      "expression": "a*b+1",
+      "values.a": [
+        "74",
+        0
+      ],
+      "values.b": [
+        "76",
+        0
+      ]
+    },
+    "class_type": "ComfyMathExpression",
+    "_meta": {
+      "title": "数学表达式"
+    }
+  },
+  "74": {
+    "inputs": {
+      "Number": "24.0"
+    },
+    "class_type": "Float",
+    "_meta": {
+      "title": "fps"
+    }
+  },
+  "76": {
+    "inputs": {
+      "Number": "10"
+    },
+    "class_type": "Int",
+    "_meta": {
+      "title": "length"
+    }
+  },
   "69:1": {
     "inputs": {
       "vae_name": "ltx-2.3-22b-dev_audio_vae.safetensors",
@@ -71,7 +106,7 @@
     },
     "class_type": "RandomNoise",
     "_meta": {
-      "title": "RandomNoise"
+      "title": "随机噪波"
     }
   },
   "69:19": {
@@ -325,7 +360,10 @@
   },
   "69:12": {
     "inputs": {
-      "value": 24
+      "value": [
+        "74",
+        0
+      ]
     },
     "class_type": "PrimitiveFloat",
     "_meta": {
@@ -405,7 +443,10 @@
   },
   "69:10": {
     "inputs": {
-      "value": 121
+      "value": [
+        "73",
+        1
+      ]
     },
     "class_type": "PrimitiveInt",
     "_meta": {

@@ -19,9 +19,9 @@ input_node_mapping:
     required: true
   fps:
     description: frame rate
-    node_input_field: "value"
-    node_meta_title: "Frame Rate(float)"
-    value_type: int
+    node_input_field: "Number"
+    node_meta_title: "fps"
+    value_type: float
     required: true
   width:
     description: Pixel width of the generated video
@@ -42,9 +42,9 @@ input_node_mapping:
     value_type: string
     required: false
   length:
-    description: Total number of frames in the video (equals seconds multiplied by frame rate plus one)
-    node_input_field: "value"
-    node_meta_title: "Length"
+    description: The duration of the generated video, in seconds
+    node_input_field: "Number"
+    node_meta_title: "length"
     value_type: int
     required: true
   image_file:
