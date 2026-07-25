@@ -1,0 +1,61 @@
+id: ltx2.3_flf2v_int8
+status: disabled
+api_json_file: data/default_workflows/workflow/ltx2.3_flf2v_int8.json
+type: first-last-frame-to-video
+purpose: first-last-frame-to-video requests
+output_type: video
+input_node_mapping:
+  seed:
+    description: Random seed
+    node_input_field: "noise_seed"
+    node_meta_title: "RandomNoise"
+    value_type: int
+    required: false
+  prompt:
+    description: First-Last-Frame-to-Video prompt
+    node_input_field: "text"
+    node_meta_title: "CLIPTextEncode"
+    value_type: string
+    required: true
+  fps:
+    description: frame rate
+    node_input_field: "Number"
+    node_meta_title: "fps"
+    value_type: float
+    required: true
+  width:
+    description: Pixel width of the generated video
+    node_input_field: "value"
+    node_meta_title: "Width"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated video
+    node_input_field: "value"
+    node_meta_title: "Height"
+    value_type: int
+    required: true
+  negative_prompt:
+    description: First-Last-Frame-to-Video negative prompt
+    node_input_field: "text"
+    node_meta_title: "negative prompt"
+    value_type: string
+    required: false
+  length:
+    description: The duration of the generated video, in seconds
+    node_input_field: "Number"
+    node_meta_title: "length"
+    value_type: int
+    required: true
+  first_frame_image:
+    description: The reference image for the first frame of the video
+    node_input_field: "image"
+    node_meta_title: "Load First Frame"
+    value_type: file
+    required: true
+  last_frame_image:
+    description: The reference image for the last frame of the video
+    node_input_field: "image"
+    node_meta_title: "Load Last Frame"
+    value_type: file
+    required: true

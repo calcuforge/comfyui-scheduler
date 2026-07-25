@@ -82,7 +82,7 @@
     },
     "class_type": "RandomNoise",
     "_meta": {
-      "title": "随机噪波"
+      "title": "RandomNoise"
     }
   },
   "120:85": {
@@ -268,7 +268,7 @@
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "CLIP文本编码"
+      "title": "negative prompt"
     }
   },
   "120:122": {
@@ -295,17 +295,17 @@
       "title": "LTX2 NAG"
     }
   },
-  "120:92": {
-    "inputs": {
-      "text": "clean scene, no text, text-free, pure visuals,talking, precise lip sync, natural mouth movement,\nstable face, natural expression, soft skin,gentle start, motion slows toward end, steady last frame,seamless movement,\n\n女人对着镜头说“有没有给我买早餐？”。",
-      "clip": [
-        "120:123",
+  “120:92”: {
+    “inputs”: {
+      “text”: “clean scene, no text, text-free, pure visuals,talking, precise lip sync, natural mouth movement,\nstable face, natural expression, soft skin,gentle start, motion slows toward end, steady last frame,seamless movement,\n\n女人对着镜头说”有没有给我买早餐？”。”,
+      “clip”: [
+        “120:123”,
         0
       ]
     },
-    "class_type": "CLIPTextEncode",
-    "_meta": {
-      "title": "CLIP文本编码"
+    “class_type”: “CLIPTextEncode”,
+    “_meta”: {
+      “title”: “CLIPTextEncode”
     }
   },
   "120:76": {

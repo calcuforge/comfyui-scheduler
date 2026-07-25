@@ -136,7 +136,7 @@
     },
     "class_type": "RandomNoise",
     "_meta": {
-      "title": "随机噪波"
+      "title": "RandomNoise"
     }
   },
   "50:17": {
@@ -357,7 +357,7 @@
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "CLIP文本编码"
+      "title": "negative prompt"
     }
   },
   "50:23": {
@@ -417,7 +417,7 @@
     },
     "class_type": "CLIPTextEncode",
     "_meta": {
-      "title": "CLIP文本编码"
+      "title": "CLIPTextEncode"
     }
   },
   "50:60": {
