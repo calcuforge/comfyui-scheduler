@@ -1,5 +1,5 @@
 """
-CLI entry point — ``multi-comfyui-cli`` command.
+CLI entry point — ``comfyui-scheduler`` command.
 """
 
 from __future__ import annotations
@@ -21,7 +21,7 @@ from .executor import run as executor_run
 
 
 @click.group()
-@click.version_option(version="1.0.0", prog_name="multi-comfyui-cli")
+@click.version_option(version="1.0.0", prog_name="comfyui-scheduler")
 @click.option("--debug", is_flag=True, default=False, help="Enable verbose progress output.")
 @click.pass_context
 def main(ctx: click.Context, debug: bool) -> None:

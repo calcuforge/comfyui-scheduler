@@ -1,15 +1,15 @@
-# multi-comfyui-cli
+# comfyui-scheduler
 
 Command-line tool for executing ComfyUI workflows on remote ComfyUI servers.  Supports multi-node load balancing, file upload, blocking execution with progress, and basic-auth credentials.
 
 ## Installation
 
 ```bash
-cd multi-comfyui-cli
+cd comfyui-scheduler
 pip install -e .
 ```
 
-This registers the `multi-comfyui-cli` command globally.
+This registers the `comfyui-scheduler` command globally.
 
 > **Requirements:** Python ≥ 3.10.  Dependencies: `requests`, `websockets`, `click`, `pyyaml`.
 
@@ -19,16 +19,16 @@ This registers the `multi-comfyui-cli` command globally.
 
 ```bash
 # 1. Register a ComfyUI node
-multi-comfyui-cli node add --id node1 --url http://127.0.0.1:8188
+comfyui-scheduler node add --id node1 --url http://127.0.0.1:8188
 
 # 2. Import workflows into the local database
-multi-comfyui-cli workflow import-all
+comfyui-scheduler workflow import-all
 
 # 3. Run a workflow by ID with simplified inputs
-multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./photo.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./photo.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
 
 # 4. Run a workflow from a JSON file with explicit inputs
-multi-comfyui-cli run -f ./my_workflow.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"}]'
+comfyui-scheduler run -f ./my_workflow.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"}]'
 ```
 
 ---
@@ -42,20 +42,20 @@ The `run` command is the core of the tool. It loads a workflow, uploads input fi
 Workflows imported into the local database can be referenced by ID. Inputs are specified as a JSON object where keys map to workflow input fields:
 
 ```bash
-multi-comfyui-cli run -w <workflow-id> -i '{"<field>": <value>, ...}'
+comfyui-scheduler run -w <workflow-id> -i '{"<field>": <value>, ...}'
 ```
 
 **Examples:**
 
 ```bash
 # Text-to-speech
-multi-comfyui-cli run -w index_tts_2 -i '{"content": "hello world", "voice_file": "./reference.mp3"}'
+comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world", "voice_file": "./reference.mp3"}'
 
 # Image-to-image
-multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
 
 # Image-to-video with multi-scene prompt
-multi-comfyui-cli run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "./001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
+comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "./001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
 ```
 
 Input values are automatically typed based on the workflow's `input_node_mapping`: strings and numbers are set directly on workflow nodes, while `file`-typed fields are uploaded to the server first.
@@ -65,7 +65,7 @@ Input values are automatically typed based on the workflow's `input_node_mapping
 You can also run a workflow directly from a JSON file. In this mode, inputs use the explicit array format:
 
 ```bash
-multi-comfyui-cli run -f ./workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
+comfyui-scheduler run -f ./workflow.json -i '[{"type":"string","value":"a cat","node_title":"Prompt","node_field":"text"}]'
 ```
 
 ### Options
@@ -141,8 +141,8 @@ error: Workflow execution failed: CUDA out of memory.
 Register a ComfyUI node.
 
 ```bash
-multi-comfyui-cli node add --id node1 --url http://127.0.0.1:8188
-multi-comfyui-cli node add --id node2 --url http://10.0.0.5:8188 --name "gpu-server" --user admin --password s3cret
+comfyui-scheduler node add --id node1 --url http://127.0.0.1:8188
+comfyui-scheduler node add --id node2 --url http://10.0.0.5:8188 --name "gpu-server" --user admin --password s3cret
 ```
 
 | Option | Required | Description |
@@ -158,7 +158,7 @@ multi-comfyui-cli node add --id node2 --url http://10.0.0.5:8188 --name "gpu-ser
 List all registered nodes.
 
 ```bash
-multi-comfyui-cli node list
+comfyui-scheduler node list
 ```
 
 ### `node remove`
@@ -166,8 +166,8 @@ multi-comfyui-cli node list
 Remove a node by ID, name, or URL.
 
 ```bash
-multi-comfyui-cli node remove node1
-multi-comfyui-cli node remove http://127.0.0.1:8188
+comfyui-scheduler node remove node1
+comfyui-scheduler node remove http://127.0.0.1:8188
 ```
 
 ### `node import`
@@ -175,8 +175,8 @@ multi-comfyui-cli node remove http://127.0.0.1:8188
 Batch-import nodes from YAML config files. If no files are specified, defaults to `data/default_nodes.yaml` and `data/nodes.yaml`.
 
 ```bash
-multi-comfyui-cli node import
-multi-comfyui-cli node import data/my_nodes.yaml
+comfyui-scheduler node import
+comfyui-scheduler node import data/my_nodes.yaml
 ```
 
 YAML format:
@@ -200,8 +200,8 @@ Workflows are stored in a local SQLite database (`db/workflows.db`) and referenc
 Import a single workflow from a meta YAML file or workflow JSON file.
 
 ```bash
-multi-comfyui-cli workflow import data/default_workflows/meta/qwen_image_edit_2511_int8_step4.yaml
-multi-comfyui-cli workflow import data/default_workflows/workflow/index_tts_2.json
+comfyui-scheduler workflow import data/default_workflows/meta/qwen_image_edit_2511_int8_step4.yaml
+comfyui-scheduler workflow import data/default_workflows/workflow/index_tts_2.json
 ```
 
 ### `workflow import-all`
@@ -209,7 +209,7 @@ multi-comfyui-cli workflow import data/default_workflows/workflow/index_tts_2.js
 Batch-import all workflows from `data/default_workflows/` and `data/workflows/`. Default workflows are imported first; user workflows in `data/workflows/` override defaults with the same ID.
 
 ```bash
-multi-comfyui-cli workflow import-all
+comfyui-scheduler workflow import-all
 ```
 
 ### Meta YAML Format
@@ -224,7 +224,7 @@ type: image-to-image
 purpose: image-to-image requests
 output_type: image
 command_example: |
-  multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+  comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
 input_node_mapping:
   image_file:
     description: The reference image
@@ -259,12 +259,12 @@ input_node_mapping:
 When multiple nodes are registered, `run` automatically picks the one with the smallest queue (running + pending jobs).
 
 ```bash
-multi-comfyui-cli node add --id node-a --url http://10.0.0.5:8188
-multi-comfyui-cli node add --id node-b --url http://10.0.0.6:8188
-multi-comfyui-cli node add --id node-c --url http://10.0.0.7:8188
+comfyui-scheduler node add --id node-a --url http://10.0.0.5:8188
+comfyui-scheduler node add --id node-b --url http://10.0.0.6:8188
+comfyui-scheduler node add --id node-c --url http://10.0.0.7:8188
 
 # Auto-selects the least busy node
-multi-comfyui-cli run -w my_workflow -i '{...}'
+comfyui-scheduler run -w my_workflow -i '{...}'
 ```
 
 Use `--node` to target a specific node instead.
@@ -272,8 +272,8 @@ Use `--node` to target a specific node instead.
 ### `status` — Check node availability
 
 ```bash
-multi-comfyui-cli status
-multi-comfyui-cli status --url http://10.0.0.5:8188
+comfyui-scheduler status
+comfyui-scheduler status --url http://10.0.0.5:8188
 ```
 
 ---

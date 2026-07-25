@@ -5,7 +5,7 @@ type: text_to_speech
 purpose: text-to-speech requests
 output_type: audio
 command_example: |
-  multi-comfyui-cli run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
+  comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
 input_node_mapping:
   content:
     description: Audio text content

@@ -9,7 +9,7 @@ All commands emit JSON to stdout with a unified structure:
 
 Use `--debug` to print progress information to stderr (uploads, scheduler decisions, etc.).
 
-### `multi-comfyui-cli run` output
+### `comfyui-scheduler run` output
 
 **Success** (`status: "ok"`):
 
@@ -42,7 +42,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli status` output
+### `comfyui-scheduler status` output
 
 ```json
 {
@@ -56,7 +56,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli node list` output
+### `comfyui-scheduler node list` output
 
 ```json
 {
@@ -70,7 +70,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli workflow import-all` output
+### `comfyui-scheduler workflow import-all` output
 
 ```json
 {

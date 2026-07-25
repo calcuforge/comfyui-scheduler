@@ -21,7 +21,7 @@
 | `voice_file` | file | yes | Tone reference audio file |
 
 ```bash
-multi-comfyui-cli run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
+comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
 ```
 
 ### nvidia_rtx_video_upscale
@@ -32,7 +32,7 @@ multi-comfyui-cli run -w index_tts_2 -i '{"content": "hello world this is a test
 | `video_file` | file | yes | Source video that needs to be enlarged |
 
 ```bash
-multi-comfyui-cli run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/anson/Downloads/wan22_00002.mp4", "magnification": 2.0}'
+comfyui-scheduler run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/anson/Downloads/wan22_00002.mp4", "magnification": 2.0}'
 ```
 
 ### ominivoice_voice_design
@@ -45,7 +45,7 @@ multi-comfyui-cli run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/a
 | `speed` | float | no | Speed |
 
 ```bash
-multi-comfyui-cli run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
+comfyui-scheduler run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
 ```
 
 ### qwen_image_edit_2511_int8_step4
@@ -60,7 +60,7 @@ multi-comfyui-cli run -w ominivoice_voice_design -i '{"voice_instruct": "男，�
 | `seed` | int | no | Random seed |
 
 ```bash
-multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
 ```
 
 ### wan2.2_svi2pro_vbvr_int8
@@ -76,7 +76,7 @@ multi-comfyui-cli run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/
 | `seed` | int | no | Random seed |
 
 ```bash
-multi-comfyui-cli run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
+comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
 ```
 
 ### z_image_fp16
@@ -90,7 +90,7 @@ multi-comfyui-cli run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/a
 | `seed` | int | no | Random seed |
 
 ```bash
-multi-comfyui-cli run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
+comfyui-scheduler run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
 ```
 
 
@@ -104,7 +104,7 @@ All commands emit JSON to stdout with a unified structure:
 
 Use `--debug` to print progress information to stderr (uploads, scheduler decisions, etc.).
 
-### `multi-comfyui-cli run` output
+### `comfyui-scheduler run` output
 
 **Success** (`status: "ok"`):
 
@@ -137,7 +137,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli status` output
+### `comfyui-scheduler status` output
 
 ```json
 {
@@ -151,7 +151,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli node list` output
+### `comfyui-scheduler node list` output
 
 ```json
 {
@@ -165,7 +165,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 }
 ```
 
-### `multi-comfyui-cli workflow import-all` output
+### `comfyui-scheduler workflow import-all` output
 
 ```json
 {

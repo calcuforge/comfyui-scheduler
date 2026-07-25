@@ -52,7 +52,7 @@ def select_node(task_id: str = "") -> ComfyUIApi:
     nodes = list_nodes()
     if not nodes:
         raise NodeNotFoundError(
-            "No nodes registered.  Use 'multi-comfyui-cli node add --url URL' first."
+            "No nodes registered.  Use 'comfyui-scheduler node add --url URL' first."
         )
 
     while True:

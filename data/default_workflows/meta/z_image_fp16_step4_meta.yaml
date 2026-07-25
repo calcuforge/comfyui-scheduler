@@ -5,7 +5,7 @@ type: text_to_image
 purpose: text-to-image requests
 output_type: image
 command_example: |
-  multi-comfyui-cli run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
+  comfyui-scheduler run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
 input_node_mapping:
   prompt:
     description: Text-to-Image prompt
