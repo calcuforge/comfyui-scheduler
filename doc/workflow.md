@@ -5,6 +5,7 @@
 | ID | Type | Purpose | Output |
 |----|------|---------|--------|
 | index_tts_2 | text_to_speech | text-to-speech requests | audio |
+| nvidia_rtx_image_upscale | image-upscale | image upscale requests | image |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
@@ -23,6 +24,13 @@
 ```bash
 comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
 ```
+
+### nvidia_rtx_image_upscale
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_file` | file | yes | Source image that needs to be enlarged |
+| `magnification` | float | yes | magnification |
 
 ### nvidia_rtx_video_upscale
 
