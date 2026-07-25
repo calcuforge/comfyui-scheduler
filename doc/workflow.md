@@ -5,6 +5,9 @@
 | ID | Type | Purpose | Output |
 |----|------|---------|--------|
 | index_tts_2 | text_to_speech | text-to-speech requests | audio |
+| ltx2.3_flf2v_int8 | first-last-frame-to-video | first-last-frame-to-video requests | video |
+| ltx2.3_i2v_int8 | image-to-video | image-to-video requests | video |
+| ltx2.3_t2v_int8 | text-to-video | text-to-video requests | video |
 | nvidia_rtx_image_upscale | image-upscale | image upscale requests | image |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
@@ -24,6 +27,45 @@
 ```bash
 comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test", "voice_file": "C:/Users/anson/Downloads/f8b1504e2799c77536d3fae52be4f3ca.mp3"}'
 ```
+
+### ltx2.3_flf2v_int8
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `first_frame_image` | file | yes | The reference image for the first frame of the video |
+| `fps` | float | yes | frame rate |
+| `height` | int | yes | Pixel height of the generated video |
+| `last_frame_image` | file | yes | The reference image for the last frame of the video |
+| `length` | int | yes | The duration of the generated video, in seconds |
+| `prompt` | string | yes | First-Last-Frame-to-Video prompt |
+| `width` | int | yes | Pixel width of the generated video |
+| `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt |
+| `seed` | int | no | Random seed |
+
+### ltx2.3_i2v_int8
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fps` | float | yes | frame rate |
+| `height` | int | yes | Pixel height of the generated video |
+| `image_file` | file | yes | The reference image for the first frame of the video |
+| `length` | int | yes | The duration of the generated video, in seconds |
+| `prompt` | string | yes | Image-to-Video prompt |
+| `width` | int | yes | Pixel width of the generated video |
+| `negative_prompt` | string | no | Image-to-Video negative prompt |
+| `seed` | int | no | Random seed |
+
+### ltx2.3_t2v_int8
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `fps` | float | yes | frame rate |
+| `height` | int | yes | Pixel height of the generated video |
+| `length` | int | yes | The duration of the generated video, in seconds |
+| `prompt` | string | yes | Text-to-Video prompt |
+| `width` | int | yes | Pixel width of the generated video |
+| `negative_prompt` | string | no | Text-to-Video negative prompt |
+| `seed` | int | no | Random seed |
 
 ### nvidia_rtx_image_upscale
 
