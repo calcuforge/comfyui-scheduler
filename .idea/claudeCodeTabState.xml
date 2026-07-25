@@ -10,7 +10,7 @@
               <option name="sessionId" value="365c993a-37b7-4ebe-ad58-6b90f2593b93" />
               <option name="cwd" value="C:\Users\anson\dev\video-creation\multi-comfyui-cli" />
               <option name="model" value="claude-sonnet-4-6[1m]" />
-              <option name="permissionMode" value="default" />
+              <option name="permissionMode" value="bypassPermissions" />
             </TabSessionState>
           </value>
         </entry>

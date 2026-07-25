@@ -1,0 +1,19 @@
+id: nvidia_rtx_image_upscale
+status: enabled
+api_json_file: data/default_workflows/workflow/nvidia_rtx_image_upscale.json
+type: image-upscale
+purpose: image upscale requests
+output_type: image
+input_node_mapping:
+  magnification:
+    description: magnification
+    node_input_field: "resize_type.scale"
+    node_meta_title: "RTX Video Super Resolution"
+    value_type: float
+    required: true
+  image_file:
+    description: Source image that needs to be enlarged
+    node_input_field: "image"
+    node_meta_title: "加载图像"
+    value_type: file
+    required: true

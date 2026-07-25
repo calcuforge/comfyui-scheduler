@@ -1,0 +1,63 @@
+{
+  "1": {
+    "inputs": {
+      "resize_type": "scale by multiplier",
+      "resize_type.scale": 2,
+      "quality": "ULTRA",
+      "images": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "RTXVideoSuperResolution",
+    "_meta": {
+      "title": "RTX Video Super Resolution"
+    }
+  },
+  "2": {
+    "inputs": {
+      "image": "ComfyUI_00003_.png"
+    },
+    "class_type": "LoadImage",
+    "_meta": {
+      "title": "加载图像"
+    }
+  },
+  "3": {
+    "inputs": {
+      "filename_prefix": "ComfyUI",
+      "images": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "SaveImage",
+    "_meta": {
+      "title": "保存图像"
+    }
+  },
+  "5": {
+    "inputs": {
+      "compare_view": {
+        "beforeImages": [
+          "/api/view?filename=comfy.compare.a_temp_ybtlr_00001_.png&subfolder=&type=temp&rand=0.9422615919408576"
+        ],
+        "afterImages": [
+          "/api/view?filename=comfy.compare.b_temp_ybtlr_00001_.png&subfolder=&type=temp&rand=0.9422615919408576"
+        ]
+      },
+      "image_a": [
+        "2",
+        0
+      ],
+      "image_b": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "ImageCompare",
+    "_meta": {
+      "title": "图像对比"
+    }
+  }
+}
