@@ -7,10 +7,10 @@
           <value>
             <TabSessionState>
               <option name="provider" value="claude" />
-              <option name="sessionId" value="365c993a-37b7-4ebe-ad58-6b90f2593b93" />
-              <option name="cwd" value="C:\Users\anson\dev\video-creation\multi-comfyui-cli" />
+              <option name="sessionId" value="e0f8f8be-0c3d-4a61-93ab-6a61d6db5a92" />
+              <option name="cwd" value="C:\Users\anson\dev\remotion-template\comfyui-scheduler" />
               <option name="model" value="claude-sonnet-4-6[1m]" />
-              <option name="permissionMode" value="bypassPermissions" />
+              <option name="permissionMode" value="default" />
             </TabSessionState>
           </value>
         </entry>

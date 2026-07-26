@@ -31,6 +31,8 @@ comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./p
 comfyui-scheduler run -f ./my_workflow.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"}]'
 ```
 
+> See [doc/workflow.md](doc/workflow.md) for the full workflow list, input fields, and command examples.
+
 ---
 
 ## Pipeline Execution (`run`)
