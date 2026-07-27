@@ -5,6 +5,7 @@ CLI entry point — ``comfyui-scheduler`` command.
 from __future__ import annotations
 
 import json
+import os
 import uuid
 from pathlib import Path
 
@@ -334,12 +335,14 @@ def status_cmd(url: str) -> None:
     """Show queue status of registered nodes."""
     nodes_status: list[dict] = []
     if url:
+        url = os.path.expandvars(url)
         api = ComfyUIApi(url)
         nodes_status.append(_get_node_status(url, api))
     else:
         nodes = node_db.list_nodes()
         if not nodes:
             output.ok("ok", {"nodes": [], "msg": "(no nodes registered)"})
+            return
         for nd in nodes:
             api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
             nodes_status.append(_get_node_status(nd["name"], api))

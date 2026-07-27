@@ -64,8 +64,8 @@ def list_nodes() -> list[dict[str, Any]]:
     ).fetchall()
     conn.close()
     return [
-        {"id": r[0], "url": r[1], "user": r[2], "password": r[3],
-         "name": r[4], "blocking": bool(r[5])}
+        {"id": r[0], "url": os.path.expandvars(r[1]), "user": r[2],
+         "password": r[3], "name": r[4], "blocking": bool(r[5])}
         for r in rows
     ]
 

@@ -69,7 +69,7 @@ def select_node(task_id: str = "") -> ComfyUIApi:
                 running = len(q.get("queue_running", []))
                 reachable += 1
             except Exception:
-                output.debug(f"[scheduler] node '{nd['name']}' ({nd['url']}) is unreachable")
+                output.debug(f"[scheduler] node '{nd['name']}' ({url}) is unreachable")
                 continue
 
             if running == 0:
