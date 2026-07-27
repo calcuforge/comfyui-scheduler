@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,7 @@ def add_node(node_id: str, url: str, user: str = "", password: str = "",
     conn.execute(_node_table())
 
     now = datetime.now(timezone.utc).isoformat(timespec="seconds")
+    expanded_url = os.path.expandvars(url).rstrip("/")
     conn.execute(
         """
         INSERT INTO node (id, url, user, password, name, blocking, created_at, updated_at)
@@ -45,7 +47,7 @@ def add_node(node_id: str, url: str, user: str = "", password: str = "",
             blocking   = excluded.blocking,
             updated_at = excluded.updated_at
         """,
-        (node_id, url.rstrip("/"), user, password, name or node_id,
+        (node_id, expanded_url, user, password, name or node_id,
          int(blocking), now, now),
     )
     conn.commit()

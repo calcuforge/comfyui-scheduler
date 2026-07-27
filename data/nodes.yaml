@@ -1,0 +1,11 @@
+# User-defined ComfyUI nodes.
+# Same format as default_nodes.yaml — add your own nodes here.
+# This file is imported after defaults and can override entries with the same id.
+# Environment variables in url are expanded automatically via ${ENV_VAR}.
+#
+# Example:
+#   - id: gpu-server
+#     url: "http://${COMFYUI_HOST}:8188"
+#     user: ""
+#     password: ""
+#     blocking: true

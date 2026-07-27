@@ -1,3 +1,15 @@
+# ComfyUI node registry.
+# Each node entry requires an id and url; user/password are optional (basic auth).
+# blocking: true means the scheduler waits for this node when all nodes are busy.
+#
+# Environment variables in url are expanded automatically at import time and at
+# runtime via ${ENV_VAR} syntax:
+#
+#   url: "${BACKEND_PROXY_ENDPOINT}"
+#
+# Import via:
+#   comfyui-scheduler node import
+#   comfyui-scheduler node import data/default_nodes.yaml
 - id: node1
   url: "http://127.0.0.1:8188"
   user: ""
