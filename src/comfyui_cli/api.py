@@ -27,10 +27,16 @@ class ComfyUIApi:
         user: str = "",
         password: str = "",
         task_id: str = "",
+        blocking: bool = True,
     ) -> None:
         self.url = url.rstrip("/")
         self.auth = HTTPBasicAuth(user, password) if user else None
         self.task_id = task_id
+        # When False, the node is a thin proxy that exposes only POST /execute
+        # (multipart upload + execute + poll + download in one call), and the
+        # native ComfyUI endpoints (/prompt, /ws, /history, /view, /upload/*)
+        # are unavailable.
+        self.blocking = blocking
 
         self._session = requests.Session()
         if task_id:

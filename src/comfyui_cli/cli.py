@@ -336,12 +336,16 @@ def status_cmd(url: str) -> None:
             output.ok("ok", {"nodes": [], "msg": "(no nodes registered)"})
             return
         for nd in nodes:
-            api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""))
+            api = ComfyUIApi(nd["url"], nd.get("user", ""), nd.get("password", ""),
+                              blocking=bool(nd.get("blocking", True)))
             nodes_status.append(_get_node_status(nd["name"], api))
     output.ok("ok", {"nodes": nodes_status})
 
 
 def _get_node_status(label: str, api: ComfyUIApi) -> dict:
+    if not getattr(api, "blocking", True):
+        output.debug(f"  {label}: non-blocking proxy (no /queue)")
+        return {"name": label, "url": api.url, "status": "proxy"}
     try:
         q = api.get_queue()
         running = len(q.get("queue_running", []))

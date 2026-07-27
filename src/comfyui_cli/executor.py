@@ -4,13 +4,17 @@ Executor — the core run pipeline: validate, upload assets, submit, poll, colle
 
 from __future__ import annotations
 
-import sys
+import json
+import os
+import re
+import uuid
 from pathlib import Path
 from typing import Any
 
-from requests.compat import urlencode
+import requests
+from requests.compat import urlencode, urljoin
 
-from . import output
+from . import output, workflow_db
 from .api import ComfyUIApi
 from .exceptions import ExecutionError, WorkflowError
 from .workflow import Workflow
@@ -40,7 +44,35 @@ def run(
 
     Returns a dict with keys ``files`` and ``prompt_id``.
     Raises ``WorkflowError`` / ``ExecutionError`` on failure.
+
+    For non-blocking proxy nodes (``api.blocking == False``), delegates to
+    ``run_via_proxy`` which posts a single multipart request to /execute —
+    the proxy bundles upload + submit + poll + download in one call, so the
+    native ComfyUI endpoints (/prompt, /ws, /history, /view, /upload/*) are
+    never touched.
     """
+    if not getattr(api, "blocking", True):
+        return run_via_proxy(
+            workflow_source, api,
+            inputs=inputs, output_type=output_type,
+        )
+    return _run_native(
+        workflow_source, api,
+        inputs=inputs,
+        output_node_title=output_node_title,
+        output_type=output_type,
+    )
+
+
+def _run_native(
+    workflow_source: str | Path | dict,
+    api: ComfyUIApi,
+    *,
+    inputs: list[dict] | None = None,
+    output_node_title: str | None = None,
+    output_type: str = "",
+) -> dict:
+    """Execute a workflow against a native ComfyUI node (blocking path)."""
     # 1. Load workflow
     if isinstance(workflow_source, dict):
         wf = Workflow(config=workflow_source)
@@ -115,7 +147,7 @@ def run(
         output.debug(f"[run] Final file count: {len(files)}")
 
     if not files:
-        raise ExecutionError(f"No output files produced.")
+        raise ExecutionError("No output files produced.")
 
     # Build full URLs
     result_files = []
@@ -132,3 +164,173 @@ def run(
         output.debug(f"  {f['kind']:6s}  {url}")
 
     return {"files": result_files, "prompt_id": prompt_id}
+
+
+# ── non-blocking proxy path ────────────────────────────────────────────────
+
+_OUTPUT_EXT = {
+    "image": "png",
+    "video": "mp4",
+    "audio": "wav",
+}
+
+_CD_FILENAME_RE = re.compile(r'filename\*?=(?:UTF-8\'\')?"?([^";]+)"?', re.IGNORECASE)
+
+
+def _parse_content_disposition_filename(value: str | None) -> str | None:
+    if not value:
+        return None
+    m = _CD_FILENAME_RE.search(value)
+    return m.group(1) if m else None
+
+
+def _output_dir() -> Path:
+    project_root = workflow_db.find_project_root(Path.cwd())
+    out_dir = project_root / "output"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return out_dir
+
+
+def run_via_proxy(
+    workflow_source: str | Path | dict,
+    api: ComfyUIApi,
+    *,
+    inputs: list[dict] | None = None,
+    output_type: str = "",
+) -> dict:
+    """Execute a workflow against a non-blocking proxy node via POST /execute.
+
+    The proxy exposes a single endpoint that bundles: file upload to ComfyUI,
+    workflow_api_json submission, blocking poll for completion, and download of
+    the produced file.  No native ComfyUI endpoints are used by the scheduler.
+
+    Request (multipart/form-data):
+      - file_mapping: JSON string — {form_field_name: {node_input_field, node_meta_title}}
+      - workflow_api_json: JSON string — workflow JSON with all non-file fields filled in
+      - output_type: string — expected artifact kind (image / video / audio), used by
+        the proxy to decide which output node to download
+      - <form_field_name>...: file blobs (one per entry in file_mapping)
+
+    Response:
+      - 200: raw file bytes of the produced artifact (Content-Disposition may
+             carry a filename hint)
+      - 500: JSON {"status":"error","msg":"..."}
+    """
+    # 1. Load workflow
+    if isinstance(workflow_source, dict):
+        wf = Workflow(config=workflow_source)
+    else:
+        wf_path = Path(workflow_source)
+        if not wf_path.exists():
+            raise WorkflowError(f"Workflow file not found: {wf_path}")
+        wf = Workflow(wf_path)
+
+    # 2. Partition inputs: string values go straight into the workflow JSON;
+    #    file values are stashed for the proxy to upload & splice in.
+    file_inputs: list[tuple[str, InputItem]] = []  # (form_field_name, item)
+    next_file_idx = 0
+
+    for item in (inputs or []):
+        inp = InputItem(
+            type=item["type"],
+            value=item["value"],
+            node_title=item["node_title"],
+            node_field=item["node_field"],
+        )
+        if inp.type == "file":
+            ap = Path(inp.value)
+            if not ap.exists():
+                raise FileNotFoundError(f"File not found: {ap}")
+            next_file_idx += 1
+            form_field = f"file{next_file_idx}"
+            file_inputs.append((form_field, inp))
+            output.debug(f"[proxy] staged {ap.name} as {form_field} -> "
+                         f"{inp.node_title}.{inp.node_field}")
+        else:
+            wf.set_node_param(inp.node_title, inp.node_field, inp.value)
+            val_str = str(inp.value)
+            output.debug(
+                f"[input] {inp.node_title}.{inp.node_field} = "
+                f"{val_str[:80]}{'...' if len(val_str) > 80 else ''}"
+            )
+
+    # 3. Build multipart payload
+    file_mapping = {
+        field: {
+            "node_input_field": inp.node_field,
+            "node_meta_title": inp.node_title,
+        }
+        for field, inp in file_inputs
+    }
+
+    files_payload: list[tuple[str, tuple[str, bytes]]] = []
+    for field, inp in file_inputs:
+        local_path = Path(inp.value)
+        with open(local_path, "rb") as fh:
+            files_payload.append((field, (local_path.name, fh.read())))
+
+    form_fields = {
+        "file_mapping": (None, json.dumps(file_mapping, ensure_ascii=False)),
+        "workflow_api_json": (None, json.dumps(wf, ensure_ascii=False)),
+        "output_type": (None, output_type or ""),
+    }
+
+    execute_url = urljoin(api.url, "/execute")
+    output.debug(f"[proxy] POST {execute_url}  "
+                 f"files={list(file_mapping)} workflow_nodes={len(wf)}")
+
+    # 4. Single blocking call
+    try:
+        r = api._session.post(
+            execute_url,
+            data=form_fields,
+            files=files_payload,
+            auth=api.auth,
+            stream=True,
+        )
+    except requests.RequestException as exc:
+        raise ExecutionError(f"/execute request failed: {exc}") from exc
+
+    if r.status_code == 500:
+        try:
+            err = r.json()
+            msg = err.get("msg") or err.get("message") or r.text
+        except ValueError:
+            msg = r.text or "(no error body)"
+        raise ExecutionError(f"/execute failed: {msg}")
+
+    if r.status_code != 200:
+        raise ExecutionError(
+            f"/execute returned {r.status_code} {r.reason}: {r.text[:500]}"
+        )
+
+    # 5. Save returned file bytes to a local output dir
+    cd = r.headers.get("Content-Disposition")
+    filename = _parse_content_disposition_filename(cd)
+    if not filename:
+        ext = _OUTPUT_EXT.get(output_type, "bin")
+        filename = f"{uuid.uuid4().hex}.{ext}"
+
+    filename = os.path.basename(filename) or f"{uuid.uuid4().hex}.bin"
+
+    out_dir = _output_dir()
+    out_path = out_dir / filename
+    size = 0
+    with open(out_path, "wb") as fh:
+        for chunk in r.iter_content(chunk_size=1 << 20):
+            if chunk:
+                fh.write(chunk)
+                size += len(chunk)
+
+    kind = output_type or r.headers.get("Content-Type", "").split("/")[0] or "file"
+    output.debug(f"[proxy] saved {size} bytes -> {out_path}")
+
+    return {
+        "files": [{
+            "kind": kind,
+            "url": f"file://{out_path.as_posix()}",
+            "filename": filename,
+            "path": str(out_path),
+        }],
+        "prompt_id": "",
+    }

@@ -46,9 +46,11 @@ def select_node(task_id: str = "") -> ComfyUIApi:
     """Select a node with scheduling logic.
 
     Rules (in priority order):
-    1. If any node is idle (queue_running == 0), pick it.
-    2. If no idle nodes but some nodes have blocking=False, pick one of them.
-    3. If all nodes are busy and all have blocking=True, block until one is idle.
+    1. If any blocking node is idle (queue_running == 0), pick it.
+    2. Otherwise, if any non-blocking proxy node exists, pick it (it exposes
+       only POST /execute and handles concurrency internally, so it is always
+       eligible).
+    3. Otherwise (all nodes are blocking and busy), wait for one to become idle.
     """
     nodes = list_nodes()
     if not nodes:
@@ -63,7 +65,18 @@ def select_node(task_id: str = "") -> ComfyUIApi:
 
         for nd in nodes:
             url = os.path.expandvars(nd["url"])
-            api = ComfyUIApi(url, nd.get("user", ""), nd.get("password", ""), task_id=task_id)
+            blocking = bool(nd.get("blocking", True))
+            api = ComfyUIApi(url, nd.get("user", ""), nd.get("password", ""),
+                              task_id=task_id, blocking=blocking)
+
+            # Non-blocking proxy nodes don't speak the ComfyUI REST protocol —
+            # only POST /execute.  Treat them as always-eligible and skip the
+            # /queue probe (it would 404 and mark the node unreachable).
+            if not blocking:
+                nonblocking.append((api, nd))
+                reachable += 1
+                continue
+
             try:
                 q = api.get_queue()
                 running = len(q.get("queue_running", []))
@@ -74,8 +87,6 @@ def select_node(task_id: str = "") -> ComfyUIApi:
 
             if running == 0:
                 idle.append((api, nd))
-            elif not nd.get("blocking", True):
-                nonblocking.append((api, nd))
 
         if reachable == 0:
             raise NodeNotFoundError(
@@ -88,18 +99,15 @@ def select_node(task_id: str = "") -> ComfyUIApi:
             return best[0]
 
         if nonblocking:
-            best = min(
-                nonblocking,
-                key=lambda x: len(x[0].get_queue().get("queue_running", []))
-                              + len(x[0].get_queue().get("queue_pending", [])),
-            )
+            best = nonblocking[0]
             output.debug(
-                f"[scheduler] selected non-blocking node '{best[1]['name']}' "
+                f"[scheduler] selected non-blocking proxy '{best[1]['name']}' "
                 f"({best[1]['url']})"
             )
             return best[0]
 
         output.debug("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
+        time.sleep(5)
         time.sleep(5)
 
 
