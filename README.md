@@ -76,7 +76,6 @@ comfyui-scheduler run -f ./workflow.json -i '[{"type":"string","value":"a cat","
 |--------|-------------|
 | `-w, --workflow-id ID` | Workflow ID from the database (preferred). Mutually required with `-f`. |
 | `-f, --workflow-file PATH` | Path to a ComfyUI API-format workflow JSON file. |
-| `-n, --node ID` | Target a specific node. If omitted, the least-busy node is auto-selected. |
 | `-i, --inputs JSON` | Input values — a JSON object (with `-w`) or JSON array (with `-f`). |
 | `--output-node TITLE` | `_meta.title` of the node to collect outputs from. Defaults to the last node. |
 
@@ -269,7 +268,7 @@ comfyui-scheduler node add --id node-c --url http://10.0.0.7:8188
 comfyui-scheduler run -w my_workflow -i '{...}'
 ```
 
-Use `--node` to target a specific node instead.
+All workflow execution uses automatic least-busy node selection.
 
 ### `status` — Check node availability
 

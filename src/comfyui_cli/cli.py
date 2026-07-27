@@ -136,17 +136,15 @@ def node_import(config_files: tuple[str, ...]) -> None:
 @click.option("--workflow-id", "-w", default=None, help="Workflow id from the database.")
 @click.option("--workflow-file", "-f", default=None, type=click.Path(exists=True),
               help="Path to a workflow JSON file.")
-@click.option("--node", "-n", "node_id", default=None, help="Node id to use.")
 @click.option("--inputs", "-i", default="[]", help="JSON array of input objects.")
 @click.option("--output-node", default=None, help="_meta.title of the output node.")
 def run_cmd(
     workflow_id: str | None,
     workflow_file: str | None,
-    node_id: str | None,
     inputs: str,
     output_node: str | None,
 ) -> None:
-    """Execute a workflow on a ComfyUI node."""
+    """Execute a workflow, auto-selecting the least-busy ComfyUI node."""
     if not workflow_id and not workflow_file:
         raise click.UsageError("Either --workflow-id or --workflow-file is required.")
 
@@ -288,16 +286,10 @@ def run_cmd(
         nodes = node_db.list_nodes()
         output.debug(f"[auto] {len(nodes)} node(s) registered.")
 
-    # -- resolve node -------------------------------------------------------
+    # -- auto-select node --------------------------------------------------
     task_id = str(uuid.uuid4())
     try:
-        if node_id:
-            target = next((n for n in nodes if n["id"] == node_id), None)
-            if not target:
-                output.error(f"Node not found: {node_id}")
-            api = node_manager.to_api(target, task_id=task_id)
-        else:
-            api = node_manager.select_node(task_id=task_id)
+        api = node_manager.select_node(task_id=task_id)
     except node_db.NodeNotFoundError as exc:
         output.error(str(exc))
 
