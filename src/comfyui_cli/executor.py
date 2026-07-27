@@ -191,6 +191,38 @@ def _output_dir() -> Path:
     return out_dir
 
 
+def _build_multipart_body(
+    fields: dict[str, tuple[str | None, str | bytes]]
+) -> tuple[bytes, str]:
+    """Minimal multipart/form-data encoder.
+
+    ``fields`` maps name → (filename_or_None, value).  Text values are UTF-8
+    encoded.  Always emits multipart/form-data regardless of whether file
+    fields are present — requests falls back to urlencoding when ``files`` is
+    empty, which the /execute proxy rejects.
+    """
+    boundary = f"----comfyui-scheduler-{uuid.uuid4().hex}"
+    crlf = b"\r\n"
+    parts: list[bytes] = []
+    for name, (filename, value) in fields.items():
+        parts.append(f"--{boundary}".encode("utf-8") + crlf)
+        if filename is None:
+            parts.append(
+                f'Content-Disposition: form-data; name="{name}"'.encode("utf-8")
+                + crlf + crlf
+            )
+        else:
+            parts.append(
+                f'Content-Disposition: form-data; name="{name}"; filename="{filename}"'
+                .encode("utf-8")
+                + crlf + b"Content-Type: application/octet-stream" + crlf + crlf
+            )
+        v = value.encode("utf-8") if isinstance(value, str) else value
+        parts.append(v + crlf)
+    parts.append(f"--{boundary}--".encode("utf-8") + crlf)
+    return b"".join(parts), f"multipart/form-data; boundary={boundary}"
+
+
 def run_via_proxy(
     workflow_source: str | Path | dict,
     api: ComfyUIApi,
@@ -254,7 +286,8 @@ def run_via_proxy(
                 f"{val_str[:80]}{'...' if len(val_str) > 80 else ''}"
             )
 
-    # 3. Build multipart payload
+    # 3. Build multipart payload (always multipart/form-data, even when no
+    #    file fields are present — requests would otherwise urlencode).
     file_mapping = {
         field: {
             "node_input_field": inp.node_field,
@@ -263,17 +296,17 @@ def run_via_proxy(
         for field, inp in file_inputs
     }
 
-    files_payload: list[tuple[str, tuple[str, bytes]]] = []
-    for field, inp in file_inputs:
-        local_path = Path(inp.value)
-        with open(local_path, "rb") as fh:
-            files_payload.append((field, (local_path.name, fh.read())))
-
-    form_fields = {
+    form_fields: dict[str, tuple[str | None, str | bytes]] = {
         "file_mapping": (None, json.dumps(file_mapping, ensure_ascii=False)),
         "workflow_api_json": (None, json.dumps(wf, ensure_ascii=False)),
         "output_type": (None, output_type or ""),
     }
+    for field, inp in file_inputs:
+        local_path = Path(inp.value)
+        with open(local_path, "rb") as fh:
+            form_fields[field] = (local_path.name, fh.read())
+
+    body, content_type = _build_multipart_body(form_fields)
 
     execute_url = urljoin(api.url, "/execute")
     output.debug(f"[proxy] POST {execute_url}  "
@@ -283,8 +316,8 @@ def run_via_proxy(
     try:
         r = api._session.post(
             execute_url,
-            data=form_fields,
-            files=files_payload,
+            data=body,
+            headers={"Content-Type": content_type},
             auth=api.auth,
             stream=True,
         )
