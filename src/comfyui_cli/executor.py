@@ -340,11 +340,19 @@ def run_via_proxy(
     # 5. Save returned file bytes to a local output dir
     cd = r.headers.get("Content-Disposition")
     filename = _parse_content_disposition_filename(cd)
-    if not filename:
-        ext = _OUTPUT_EXT.get(output_type, "bin")
-        filename = f"{uuid.uuid4().hex}.{ext}"
+    expected_ext = _OUTPUT_EXT.get(output_type, "")
 
-    filename = os.path.basename(filename) or f"{uuid.uuid4().hex}.bin"
+    if not filename:
+        # No filename hint at all — generate one
+        ext = expected_ext or "bin"
+        filename = f"{uuid.uuid4().hex}.{ext}"
+    else:
+        filename = os.path.basename(filename) or f"{uuid.uuid4().hex}.bin"
+        # Ensure the extension matches the declared output_type.  The proxy
+        # currently returns a bare "comfyui_output" name without an extension.
+        _, existing_ext = os.path.splitext(filename)
+        if expected_ext and existing_ext.lstrip(".").lower() != expected_ext:
+            filename = f"{filename}.{expected_ext}"
 
     out_dir = _output_dir()
     out_path = out_dir / filename
