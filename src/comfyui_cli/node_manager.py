@@ -26,8 +26,8 @@ __all__ = [
 ]
 
 
-def add_node(url: str, user: str = "", password: str = "", name: str = "") -> None:
-    _add_node(node_id=name or url.rstrip("/"), url=url, user=user, password=password, name=name)
+def add_node(url: str, user: str = "", password: str = "", name: str = "", blocking: bool = True) -> None:
+    _add_node(node_id=name or url.rstrip("/"), url=url, user=user, password=password, name=name, blocking=blocking)
 
 
 def list_nodes() -> list[dict[str, Any]]:

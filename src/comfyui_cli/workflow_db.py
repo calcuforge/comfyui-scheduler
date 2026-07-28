@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import os
 import sqlite3
 from datetime import datetime, timezone
 from pathlib import Path
@@ -11,7 +12,31 @@ import yaml
 
 
 def find_project_root(start: Path) -> Path:
-    """Walk upward from *start* until we find ``pyproject.toml``."""
+    """Resolve the project root directory.
+
+    Resolution order:
+
+    1. ``COMFYUI_SCHEDULER_HOME`` environment variable.
+    2. Walk upward from the package installation directory.
+    3. Walk upward from *start* (usually CWD).
+    """
+    # 1. Environment variable
+    env_home = os.environ.get("COMFYUI_SCHEDULER_HOME")
+    if env_home:
+        return Path(env_home).resolve()
+
+    # 2. Package installation path
+    pkg_dir = Path(__file__).resolve().parent
+    candidate = pkg_dir
+    while True:
+        if (candidate / "pyproject.toml").exists():
+            return candidate
+        parent = candidate.parent
+        if parent == candidate:
+            break
+        candidate = parent
+
+    # 3. CWD fallback
     candidate = start.resolve()
     while True:
         if (candidate / "pyproject.toml").exists():

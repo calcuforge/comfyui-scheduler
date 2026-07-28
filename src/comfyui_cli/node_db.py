@@ -55,7 +55,10 @@ def add_node(node_id: str, url: str, user: str = "", password: str = "",
 
 
 def list_nodes() -> list[dict[str, Any]]:
-    project_root = find_project_root(Path.cwd())
+    try:
+        project_root = find_project_root(Path.cwd())
+    except FileNotFoundError:
+        return []
     db_path = ensure_db(project_root)
     conn = get_connection(db_path)
     conn.execute(_node_table())

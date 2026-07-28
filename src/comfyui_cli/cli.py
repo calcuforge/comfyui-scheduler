@@ -47,10 +47,11 @@ def node() -> None:
 @click.option("--user", default="", help="Basic-auth username")
 @click.option("--password", default="", help="Basic-auth password")
 @click.option("--name", default="", help="Human-readable label")
-def node_add(node_id: str, url: str, user: str, password: str, name: str) -> None:
+@click.option("--blocking/--no-blocking", default=True, help="Whether the node is blocking (default: true)")
+def node_add(node_id: str, url: str, user: str, password: str, name: str, blocking: bool) -> None:
     """Register or update a ComfyUI node."""
-    node_db.add_node(node_id=node_id, url=url, user=user, password=password, name=name)
-    output.ok(f"Node added: {name or node_id}", {"id": node_id, "url": url})
+    node_db.add_node(node_id=node_id, url=url, user=user, password=password, name=name, blocking=blocking)
+    output.ok(f"Node added: {name or node_id}", {"id": node_id, "url": url, "blocking": blocking})
 
 
 @node.command("list")
