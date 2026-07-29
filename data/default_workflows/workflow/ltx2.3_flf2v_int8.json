@@ -34,11 +34,11 @@
   },
   "125": {
     "inputs": {
-      "Number": "10"
+      "Number": "241"
     },
     "class_type": "Int",
     "_meta": {
-      "title": "length"
+      "title": "total_frame"
     }
   },
   "126": {
@@ -48,23 +48,6 @@
     "class_type": "Float",
     "_meta": {
       "title": "fps"
-    }
-  },
-  "127": {
-    "inputs": {
-      "expression": "a*b+1",
-      "values.a": [
-        "126",
-        0
-      ],
-      "values.b": [
-        "125",
-        0
-      ]
-    },
-    "class_type": "ComfyMathExpression",
-    "_meta": {
-      "title": "数学表达式"
     }
   },
   "120:88": {
@@ -196,8 +179,8 @@
   "120:102": {
     "inputs": {
       "value": [
-        "127",
-        1
+        "125",
+        0
       ]
     },
     "class_type": "PrimitiveInt",

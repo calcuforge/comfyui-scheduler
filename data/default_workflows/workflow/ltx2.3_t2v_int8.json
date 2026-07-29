@@ -26,28 +26,11 @@
   },
   "62": {
     "inputs": {
-      "Number": "10"
+      "Number": "241"
     },
     "class_type": "Int",
     "_meta": {
-      "title": "length"
-    }
-  },
-  "63": {
-    "inputs": {
-      "expression": "a*b+1",
-      "values.a": [
-        "61",
-        0
-      ],
-      "values.b": [
-        "62",
-        0
-      ]
-    },
-    "class_type": "ComfyMathExpression",
-    "_meta": {
-      "title": "数学表达式"
+      "title": "total_frame"
     }
   },
   "50:14": {
@@ -250,8 +233,8 @@
   "50:10": {
     "inputs": {
       "value": [
-        "63",
-        1
+        "62",
+        0
       ]
     },
     "class_type": "PrimitiveInt",

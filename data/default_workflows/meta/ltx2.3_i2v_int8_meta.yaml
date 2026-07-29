@@ -41,10 +41,10 @@ input_node_mapping:
     node_meta_title: "negative prompt"
     value_type: string
     required: false
-  length:
-    description: The duration of the generated video, in seconds
+  total_frame:
+    description: Total number of frames for the generated video
     node_input_field: "Number"
-    node_meta_title: "length"
+    node_meta_title: "total_frame"
     value_type: int
     required: true
   image_file:

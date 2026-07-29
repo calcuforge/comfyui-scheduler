@@ -23,23 +23,6 @@
       "title": "LoadImage"
     }
   },
-  "73": {
-    "inputs": {
-      "expression": "a*b+1",
-      "values.a": [
-        "74",
-        0
-      ],
-      "values.b": [
-        "76",
-        0
-      ]
-    },
-    "class_type": "ComfyMathExpression",
-    "_meta": {
-      "title": "数学表达式"
-    }
-  },
   "74": {
     "inputs": {
       "Number": "24.0"
@@ -51,11 +34,11 @@
   },
   "76": {
     "inputs": {
-      "Number": "10"
+      "Number": "241"
     },
     "class_type": "Int",
     "_meta": {
-      "title": "length"
+      "title": "total_frame"
     }
   },
   "69:1": {
@@ -444,8 +427,8 @@
   "69:10": {
     "inputs": {
       "value": [
-        "73",
-        1
+        "76",
+        0
       ]
     },
     "class_type": "PrimitiveInt",
