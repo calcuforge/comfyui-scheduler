@@ -36,8 +36,8 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `fps` | float | yes | frame rate |
 | `height` | int | yes | Pixel height of the generated video |
 | `last_frame_image` | file | yes | The reference image for the last frame of the video |
-| `length` | int | yes | The duration of the generated video, in seconds |
 | `prompt` | string | yes | First-Last-Frame-to-Video prompt |
+| `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
 | `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt |
 | `seed` | int | no | Random seed |
@@ -49,8 +49,8 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `fps` | float | yes | frame rate |
 | `height` | int | yes | Pixel height of the generated video |
 | `image_file` | file | yes | The reference image for the first frame of the video |
-| `length` | int | yes | The duration of the generated video, in seconds |
 | `prompt` | string | yes | Image-to-Video prompt |
+| `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
 | `negative_prompt` | string | no | Image-to-Video negative prompt |
 | `seed` | int | no | Random seed |
@@ -61,8 +61,8 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 |-------|------|----------|-------------|
 | `fps` | float | yes | frame rate |
 | `height` | int | yes | Pixel height of the generated video |
-| `length` | int | yes | The duration of the generated video, in seconds |
 | `prompt` | string | yes | Text-to-Video prompt |
+| `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
 | `negative_prompt` | string | no | Text-to-Video negative prompt |
 | `seed` | int | no | Random seed |
