@@ -39,7 +39,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | First-Last-Frame-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt |
+| `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt (default: `text, subtitles, caption, watermark, logo, signage, letter, word, character, background music, audio waveform, sound wave, music notes, musical instruments, speakers, headphones, microphone`) |
 | `seed` | int | no | Random seed |
 
 ### ltx2.3_i2v_int8
@@ -52,7 +52,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | Image-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Image-to-Video negative prompt |
+| `negative_prompt` | string | no | Image-to-Video negative prompt (default: same as flf2v above) |
 | `seed` | int | no | Random seed |
 
 ### ltx2.3_t2v_int8
@@ -64,7 +64,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | Text-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Text-to-Video negative prompt |
+| `negative_prompt` | string | no | Text-to-Video negative prompt (default: same as flf2v above) |
 | `seed` | int | no | Random seed |
 
 ### nvidia_rtx_image_upscale

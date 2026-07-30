@@ -390,7 +390,7 @@
   },
   "69:6": {
     "inputs": {
-      "text": "text, subtitles, caption, watermark, logo, signage, letter, word, character,",
+      "text": "text, subtitles, caption, watermark, logo, signage, letter, word, character, background music, audio waveform, sound wave, music notes, musical instruments, speakers, headphones, microphone,",
       "clip": [
         "69:71",
         0

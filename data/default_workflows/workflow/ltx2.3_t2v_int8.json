@@ -320,7 +320,7 @@
   },
   "50:51": {
     "inputs": {
-      "negative": "text, subtitles, caption, watermark, logo, signage, letter, word, character,"
+      "negative": "text, subtitles, caption, watermark, logo, signage, letter, word, character, background music, audio waveform, sound wave, music notes, musical instruments, speakers, headphones, microphone,"
     },
     "class_type": "easy negative",
     "_meta": {

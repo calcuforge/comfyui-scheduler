@@ -243,7 +243,7 @@
   },
   "120:93": {
     "inputs": {
-      "text": "text, subtitles, caption, watermark, logo, signage, letter, word, character,",
+      "text": "text, subtitles, caption, watermark, logo, signage, letter, word, character, background music, audio waveform, sound wave, music notes, musical instruments, speakers, headphones, microphone,",
       "clip": [
         "120:123",
         0
@@ -280,7 +280,7 @@
   },
   "120:92": {
     "inputs": {
-      "text": "clean scene, no text, text-free, pure visuals,talking, precise lip sync, natural mouth movement,\nstable face, natural expression, soft skin,gentle start, motion slows toward end, steady last frame,seamless movement,\n\n女人对着镜头说\u201c有没有给我买早餐？\u201d。",
+      "text": "clean scene, no text, text-free, pure visuals,talking, precise lip sync, natural mouth movement,\nstable face, natural expression, soft skin,gentle start, motion slows toward end, steady last frame,seamless movement,\n\n女人对着镜头说“有没有给我买早餐？”。",
       "clip": [
         "120:123",
         0
