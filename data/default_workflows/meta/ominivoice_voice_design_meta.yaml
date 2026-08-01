@@ -1,5 +1,5 @@
 id: ominivoice_voice_design
-status: enabled
+status: disabled
 api_json_file: data/default_workflows/workflow/ominivoice_voice_design.json
 type: text_to_speech
 purpose: Character voice design based on text-to-speech
