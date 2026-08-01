@@ -470,7 +470,8 @@ def workflow_doc() -> None:
     conn = workflow_db.get_connection(db_path)
 
     rows = conn.execute(
-        "SELECT id, type, purpose, output_type, input_node_mapping, command_example FROM workflow ORDER BY id"
+        "SELECT id, type, purpose, output_type, input_node_mapping, command_example "
+        "FROM workflow WHERE status != 'disabled' ORDER BY id"
     ).fetchall()
     conn.close()
 
