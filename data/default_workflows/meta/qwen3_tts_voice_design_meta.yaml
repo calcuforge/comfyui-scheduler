@@ -1,25 +1,33 @@
 id: qwen3_tts_voice_design
-status: disabled
+status: enabled
 api_json_file: data/default_workflows/workflow/qwen3_tts_voice_design.json
 type: text_to_speech
 purpose: Character voice design based on text-to-speech
 output_type: audio
+command_example: |
+  comfyui-scheduler run -w qwen3_tts_voice_design -i '{"voice_instruct": "Ancient old male, late 70s, bass-baritone range, labored breath support", "content": "Look at these hands."}'
 input_node_mapping:
-  prompt:
-    description: Timbre Prompt
-    node_input_field: "custom_instruct"
-    node_meta_title: "Voice Instruct"
+  voice_instruct:
+    description: Voice Instruct
+    node_input_field: "instruct"
+    node_meta_title: "Qwen3-TTS Voice Design"
     value_type: string
     required: true
   content:
     description: Audio text content
     node_input_field: "text"
-    node_meta_title: "Voice Design Advanced"
+    node_meta_title: "Qwen3-TTS Voice Design"
+    value_type: string
+    required: true
+  language:
+    description: Output language
+    node_input_field: "language"
+    node_meta_title: "Qwen3-TTS Voice Design"
     value_type: string
     required: false
   seed:
     description: Random seed
     node_input_field: "seed"
-    node_meta_title: "Voice Design Advanced"
+    node_meta_title: "Qwen3-TTS Voice Design"
     value_type: int
     required: false

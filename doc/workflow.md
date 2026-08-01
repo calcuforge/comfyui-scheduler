@@ -11,7 +11,9 @@
 | nvidia_rtx_image_upscale | image-upscale | image upscale requests | image |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
+| qwen3_tts_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
+| stable_audio_3_medium | text_to_music | Text-to-music generation with Stable Audio 3 (Music / Instrument / SFX / One-shot) | audio |
 | wan2.2_svi2pro_vbvr_int8 | image-to-video | image-to-video requests | video |
 | z_image_fp16 | text_to_image | text-to-image requests | image |
 
@@ -39,7 +41,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | First-Last-Frame-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt (default: `text, subtitles, caption, watermark, logo, signage, letter, word, character, background music, audio waveform, sound wave, music notes, musical instruments, speakers, headphones, microphone`) |
+| `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt |
 | `seed` | int | no | Random seed |
 
 ### ltx2.3_i2v_int8
@@ -52,7 +54,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | Image-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Image-to-Video negative prompt (default: same as flf2v above) |
+| `negative_prompt` | string | no | Image-to-Video negative prompt |
 | `seed` | int | no | Random seed |
 
 ### ltx2.3_t2v_int8
@@ -64,7 +66,7 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `prompt` | string | yes | Text-to-Video prompt |
 | `total_frame` | int | yes | Total number of frames for the generated video |
 | `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Text-to-Video negative prompt (default: same as flf2v above) |
+| `negative_prompt` | string | no | Text-to-Video negative prompt |
 | `seed` | int | no | Random seed |
 
 ### nvidia_rtx_image_upscale
@@ -98,6 +100,19 @@ comfyui-scheduler run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/a
 comfyui-scheduler run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
 ```
 
+### qwen3_tts_voice_design
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `content` | string | yes | Audio text content |
+| `voice_instruct` | string | yes | Voice Instruct |
+| `language` | string | no | Output language |
+| `seed` | int | no | Random seed |
+
+```bash
+comfyui-scheduler run -w qwen3_tts_voice_design -i '{"voice_instruct": "Ancient old male, late 70s, bass-baritone range, labored breath support", "content": "Look at these hands."}'
+```
+
 ### qwen_image_edit_2511_int8_step4
 
 | Field | Type | Required | Description |
@@ -111,6 +126,20 @@ comfyui-scheduler run -w ominivoice_voice_design -i '{"voice_instruct": "男，�
 
 ```bash
 comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+```
+
+### stable_audio_3_medium
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `prompt` | string | yes | Music description (style, instruments, mood) |
+| `category` | string | no | Audio category: Music, Instrument, SFX or One-shot |
+| `duration` | float | no | Target audio length in seconds |
+| `enable_reprompt` | bool | no | Rewrite the prompt with an LLM before generation |
+| `seed` | int | no | Random seed |
+
+```bash
+comfyui-scheduler run -w stable_audio_3_medium -i '{"prompt": "游戏BGM，BOSS战，热血激情，打击乐为主", "duration": 180}'
 ```
 
 ### wan2.2_svi2pro_vbvr_int8

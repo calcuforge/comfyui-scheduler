@@ -1,0 +1,39 @@
+id: stable_audio_3_medium
+status: enabled
+api_json_file: data/default_workflows/workflow/stable_audio_3_medium.json
+type: text_to_music
+purpose: Text-to-music generation with Stable Audio 3 (Music / Instrument / SFX / One-shot)
+output_type: audio
+command_example: |
+  comfyui-scheduler run -w stable_audio_3_medium -i '{"prompt": "游戏BGM，BOSS战，热血激情，打击乐为主", "duration": 180}'
+input_node_mapping:
+  prompt:
+    description: Music description (style, instruments, mood)
+    node_input_field: "value"
+    node_meta_title: "User: short description (USER_INPUT in template)"
+    value_type: string
+    required: true
+  duration:
+    description: Target audio length in seconds
+    node_input_field: "value"
+    node_meta_title: "Float (Duration)"
+    value_type: float
+    required: false
+  category:
+    description: "Audio category: Music, Instrument, SFX or One-shot"
+    node_input_field: "choice"
+    node_meta_title: "Custom Combo (Category index)"
+    value_type: string
+    required: false
+  enable_reprompt:
+    description: Rewrite the prompt with an LLM before generation
+    node_input_field: "value"
+    node_meta_title: "Boolean (Enable_Reprompt)"
+    value_type: bool
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "K采样器"
+    value_type: int
+    required: false

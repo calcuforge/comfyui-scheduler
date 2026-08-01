@@ -16,7 +16,7 @@
     "inputs": {
       "text": "Look at these hands. They don’t shake because I’m afraid; they shake because they’ve forgotten how to hold anything lighter than a broadsword. I’ve buried three kings, two empires, and every friend I ever shared a fire with",
       "instruct": "Ancient old male, late 70s, bass-baritone range. Labored breath support—heavy, deliberate inhalations between phrases. The tone is textured with a thick, permanent gravel, though the vowels stay open and resonant, reflecting a lifetime of command. The pitch drops even lower when speaking of the past, vibrating with a weary, subterranean power",
-      "language": "English",
+      "language": "Auto",
       "seed": 729754692978412,
       "model": [
         "1",
