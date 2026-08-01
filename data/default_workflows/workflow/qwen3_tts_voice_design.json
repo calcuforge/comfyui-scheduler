@@ -1,65 +1,43 @@
 {
+  "1": {
+    "inputs": {
+      "repo_id": "Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign",
+      "source": "HuggingFace",
+      "precision": "bf16",
+      "attention": "auto",
+      "local_model_path": ""
+    },
+    "class_type": "Qwen3Loader",
+    "_meta": {
+      "title": "Qwen3-TTS Loader"
+    }
+  },
+  "9": {
+    "inputs": {
+      "text": "Look at these hands. They don’t shake because I’m afraid; they shake because they’ve forgotten how to hold anything lighter than a broadsword. I’ve buried three kings, two empires, and every friend I ever shared a fire with",
+      "instruct": "Ancient old male, late 70s, bass-baritone range. Labored breath support—heavy, deliberate inhalations between phrases. The tone is textured with a thick, permanent gravel, though the vowels stay open and resonant, reflecting a lifetime of command. The pitch drops even lower when speaking of the past, vibrating with a weary, subterranean power",
+      "language": "English",
+      "seed": 729754692978412,
+      "model": [
+        "1",
+        0
+      ]
+    },
+    "class_type": "Qwen3VoiceDesign",
+    "_meta": {
+      "title": "Qwen3-TTS Voice Design"
+    }
+  },
   "10": {
     "inputs": {
-      "character": "Auto",
-      "style": "Auto",
-      "custom_instruct": "粗壮有力的男声"
-    },
-    "class_type": "AILab_Qwen3TTSVoiceInstruct",
-    "_meta": {
-      "title": "Voice Instruct"
-    }
-  },
-  "11": {
-    "inputs": {
-      "filename_prefix": "audio/ComfyUI",
-      "audioUI": "/api/view?filename=ComfyUI_00002.flac&type=output&subfolder=audio&rand=0.35110742553578855",
       "audio": [
-        "15",
+        "9",
         0
       ]
     },
-    "class_type": "SaveAudio",
+    "class_type": "PreviewAudio",
     "_meta": {
-      "title": "保存音频"
-    }
-  },
-  "14": {
-    "inputs": {
-      "source": [
-        "10",
-        0
-      ]
-    },
-    "class_type": "PreviewAny",
-    "_meta": {
-      "title": "预览任意"
-    }
-  },
-  "15": {
-    "inputs": {
-      "text": "You can now easily use the voice creation nodes. In the Voice Design Node, select the character and voice tone/style you want to create. In the Voice Instruct Node, enter the text you want to speak. Connect the output of the Voice Design Node to the Voice Instruct Node, and you can use the selected voice to read the text you want to express.\n",
-      "instruct": [
-        "10",
-        0
-      ],
-      "model_size": "1.7B",
-      "device": "auto",
-      "precision": "bf16",
-      "language": "Auto",
-      "max_new_tokens": 2048,
-      "do_sample": false,
-      "top_p": 0.9,
-      "top_k": 50,
-      "temperature": 0.9,
-      "repetition_penalty": 1,
-      "attention": "auto",
-      "unload_models": true,
-      "seed": 252405875135280
-    },
-    "class_type": "AILab_Qwen3TTSVoiceDesign_Advanced",
-    "_meta": {
-      "title": "Voice Design Advanced"
+      "title": "预览音频"
     }
   }
 }
