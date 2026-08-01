@@ -306,14 +306,20 @@ def run_cmd(
     except (ComfyUICLIError, node_db.NodeNotFoundError) as exc:
         output.error(str(exc))
 
+    msg = (
+        f"Workflow completed — text output"
+        if output_type == "text"
+        else f"Workflow completed — {len(result['files'])} file(s)"
+    )
     output.ok(
-        f"Workflow completed — {len(result['files'])} file(s)",
+        msg,
         {
             "workflow_id": workflow_id,
             "task_id": task_id,
             "prompt_id": result["prompt_id"],
             "output_type": output_type,
             "files": result["files"],
+            "text": result.get("text", ""),
         },
     )
 

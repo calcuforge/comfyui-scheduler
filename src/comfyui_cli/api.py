@@ -215,6 +215,26 @@ class ComfyUIApi:
                     )
         return files
 
+    def fetch_text(self, prompt_id: str, output_node_id: str = "") -> str:
+        """Return concatenated text outputs for a completed prompt.
+
+        Text nodes (PreviewAny, etc.) expose their value in history under the
+        ``text`` key.  If *output_node_id* is given, only that node is scanned.
+        """
+        history = self.get_history(prompt_id)
+        nodes_outputs = history.get(prompt_id, {}).get("outputs", {})
+        targets = (
+            {output_node_id: nodes_outputs.get(output_node_id, {})}
+            if output_node_id
+            else nodes_outputs
+        )
+
+        chunks: list[str] = []
+        for outputs in targets.values():
+            for item in outputs.get("text", []):
+                chunks.append(item.get("text", ""))
+        return "\n".join(chunks)
+
     def build_output_urls(
         self, prompt_id: str, output_node_id: str
     ) -> list[str]:

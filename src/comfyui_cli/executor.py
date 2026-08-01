@@ -127,7 +127,26 @@ def _run_native(
 
     output.debug(f"[run] Execution completed.  prompt_id={prompt_id}")
 
-    # 5. Collect outputs — scan all nodes, filter by output_type
+    # 5. Text output — fetch from history and persist to a txt file
+    if output_type == "text":
+        text = api.fetch_text(prompt_id, output_nid)
+        if text:
+            path = _output_dir() / f"{prompt_id}.txt"
+            path.write_text(text, encoding="utf-8")
+            output.debug(f"[run] Text output saved -> {path}")
+            return {
+                "files": [{
+                    "kind": "text",
+                    "url": f"file://{path.as_posix()}",
+                    "filename": path.name,
+                    "path": str(path),
+                }],
+                "prompt_id": prompt_id,
+                "text": text,
+            }
+        output.debug("[run] No text output found in history")
+
+    # 6. Collect outputs — scan all nodes, filter by output_type
     files = api.fetch_outputs(prompt_id, output_nid)
     kinds_seen = {f["kind"] for f in files}
     output.debug(f"[run] Raw output kinds found: {kinds_seen or '(none)'}")
@@ -337,7 +356,13 @@ def run_via_proxy(
             f"/execute returned {r.status_code} {r.reason}: {r.text[:500]}"
         )
 
-    # 5. Save returned file bytes to a local output dir
+    # 5. Text output — the proxy returns the text directly in the body
+    if output_type == "text":
+        text = r.content.decode("utf-8", errors="replace")
+        output.debug(f"[proxy] text output ({len(text)} chars)")
+        return {"files": [], "prompt_id": "", "text": text}
+
+    # 6. Save returned file bytes to a local output dir
     cd = r.headers.get("Content-Disposition")
     filename = _parse_content_disposition_filename(cd)
     expected_ext = _OUTPUT_EXT.get(output_type, "")
