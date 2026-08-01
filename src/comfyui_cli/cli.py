@@ -171,10 +171,9 @@ def run_cmd(
                 rel_path = str(yf.relative_to(project_root))
                 try:
                     meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
-                    if meta.get("status") == "disabled":
-                        continue
                     workflow_db.upsert_workflow(conn, meta, wf_config)
-                    imported += 1
+                    if meta.get("status") != "disabled":
+                        imported += 1
                 except FileNotFoundError:
                     pass
         conn.commit()
@@ -417,12 +416,11 @@ def workflow_import_all() -> None:
             rel_path = str(yf.relative_to(project_root))
             try:
                 meta, wf_config = workflow_db.load_meta_and_workflow(project_root, rel_path)
-                if meta.get("status") == "disabled":
-                    output.debug(f"  SKIP {meta['id']} (status=disabled)")
-                    skipped.append(meta["id"])
-                    continue
                 workflow_db.upsert_workflow(conn, meta, wf_config)
-                output.debug(f"  OK   {meta['id']} ({label})")
+                if meta.get("status") == "disabled":
+                    output.debug(f"  DISABLED {meta['id']} ({label})")
+                else:
+                    output.debug(f"  OK   {meta['id']} ({label})")
                 imported.append(meta["id"])
             except FileNotFoundError as exc:
                 output.debug(f"  SKIP {yf.name}: {exc}")
@@ -517,10 +515,27 @@ def workflow_doc() -> None:
             lines.append("```")
         lines.append("")
 
-    # Append static extra content if present
+    # Append static extra content if present.  Workflow-specific sections
+    # wrapped in <!-- begin-workflow:<id> --> ... <!-- end-workflow:<id> -->
+    # are only kept when that workflow is enabled.
     extra_path = project_root / "doc" / "workflow.extra.md.tpl"
     if extra_path.exists():
-        lines.append(extra_path.read_text(encoding="utf-8").rstrip("\n"))
+        tpl_lines = extra_path.read_text(encoding="utf-8").splitlines()
+        enabled_ids = {row[0] for row in rows}
+        out: list[str] = []
+        active = True
+        for line in tpl_lines:
+            stripped = line.strip()
+            if stripped.startswith("<!-- begin-workflow:"):
+                wf_id = stripped.split(":", 1)[1].rstrip("-->").strip()
+                active = wf_id in enabled_ids
+                continue
+            if stripped.startswith("<!-- end-workflow:"):
+                active = True
+                continue
+            if active:
+                out.append(line)
+        lines.append("\n".join(out).rstrip("\n"))
 
     doc_dir = project_root / "doc"
     doc_dir.mkdir(parents=True, exist_ok=True)
