@@ -11,6 +11,7 @@
 | nvidia_rtx_image_upscale | image-upscale | image upscale requests | image |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | ominivoice_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
+| qwen3_asr | speech_to_text | Automatic speech recognition — transcribe audio to text with Qwen3-ASR | text |
 | qwen3_tts_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
 | qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
 | stable_audio_3_medium | text_to_music | Text-to-music generation with Stable Audio 3 (Music / Instrument / SFX / One-shot) | audio |
@@ -98,6 +99,19 @@ comfyui-scheduler run -w nvidia_rtx_video_upscale -i '{"video_file": "C:/Users/a
 
 ```bash
 comfyui-scheduler run -w ominivoice_voice_design -i '{"voice_instruct": "男，中年，极低音调", "content": "这不该是兽人的命运"}'
+```
+
+### qwen3_asr
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `audio_file` | file | yes | Source audio file to transcribe |
+| `context` | string | no | Optional context hint to guide transcription |
+| `language` | string | no | Language of the audio (auto for auto-detect) |
+| `return_timestamps` | bool | no | Include word/segment timestamps in the output |
+
+```bash
+comfyui-scheduler run -w qwen3_asr -i '{"audio_file": "C:/Users/anson/Downloads/meeting.mp3"}'
 ```
 
 ### qwen3_tts_voice_design

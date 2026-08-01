@@ -1,0 +1,56 @@
+{
+  "1": {
+    "inputs": {
+      "repo_id": "Qwen/Qwen3-ASR-1.7B",
+      "source": "HuggingFace",
+      "precision": "bf16",
+      "attention": "auto",
+      "forced_aligner": "None",
+      "local_model_path": ""
+    },
+    "class_type": "Qwen3ASRLoader",
+    "_meta": {
+      "title": "Qwen3-ASR Loader"
+    }
+  },
+  "2": {
+    "inputs": {
+      "language": "auto",
+      "context": "",
+      "return_timestamps": false,
+      "model": [
+        "1",
+        0
+      ],
+      "audio": [
+        "4",
+        0
+      ]
+    },
+    "class_type": "Qwen3ASRTranscribe",
+    "_meta": {
+      "title": "Qwen3-ASR Transcribe"
+    }
+  },
+  "4": {
+    "inputs": {
+      "audio": "ComfyUI_temp_fgycn_00001.flac"
+    },
+    "class_type": "LoadAudio",
+    "_meta": {
+      "title": "加载音频"
+    }
+  },
+  "5": {
+    "inputs": {
+      "source": [
+        "2",
+        0
+      ]
+    },
+    "class_type": "PreviewAny",
+    "_meta": {
+      "title": "预览任意"
+    }
+  }
+}

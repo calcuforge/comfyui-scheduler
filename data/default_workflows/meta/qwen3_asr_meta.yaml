@@ -1,0 +1,33 @@
+id: qwen3_asr
+status: enabled
+api_json_file: data/default_workflows/workflow/qwen3_asr.json
+type: speech_to_text
+purpose: Automatic speech recognition — transcribe audio to text with Qwen3-ASR
+output_type: text
+command_example: |
+  comfyui-scheduler run -w qwen3_asr -i '{"audio_file": "C:/Users/anson/Downloads/meeting.mp3"}'
+input_node_mapping:
+  audio_file:
+    description: Source audio file to transcribe
+    node_input_field: "audio"
+    node_meta_title: "加载音频"
+    value_type: file
+    required: true
+  language:
+    description: "Language of the audio (auto for auto-detect)"
+    node_input_field: "language"
+    node_meta_title: "Qwen3-ASR Transcribe"
+    value_type: string
+    required: false
+  context:
+    description: Optional context hint to guide transcription
+    node_input_field: "context"
+    node_meta_title: "Qwen3-ASR Transcribe"
+    value_type: string
+    required: false
+  return_timestamps:
+    description: Include word/segment timestamps in the output
+    node_input_field: "return_timestamps"
+    node_meta_title: "Qwen3-ASR Transcribe"
+    value_type: bool
+    required: false
