@@ -87,7 +87,7 @@
   },
   "52:29": {
     "inputs": {
-      "clip_name": "text_encoders/qwen3.5_2b_bf16.safetensors",
+      "clip_name": "qwen3.5_2b_bf16.safetensors",
       "type": "stable_diffusion",
       "device": "default"
     },
@@ -261,7 +261,7 @@
   },
   "52:25": {
     "inputs": {
-      "ckpt_name": "checkpoints/stable_audio_3_medium.safetensors"
+      "ckpt_name": "stable_audio_3_medium.safetensors"
     },
     "class_type": "CheckpointLoaderSimple",
     "_meta": {
@@ -270,7 +270,7 @@
   },
   "52:26": {
     "inputs": {
-      "clip_name": "text_encoders/t5gemma_b_b_ul2.safetensors",
+      "clip_name": "t5gemma_b_b_ul2.safetensors",
       "type": "stable_audio",
       "device": "default"
     },
