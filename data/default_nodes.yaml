@@ -11,7 +11,7 @@
 #   comfyui-scheduler node import
 #   comfyui-scheduler node import data/default_nodes.yaml
 - id: node1
-  url: "http://127.0.0.1:8188"
+  url: "${BACKEND_PROXY_ENDPOINT}"
   user: ""
   password: ""
-  blocking: true
+  blocking: false
