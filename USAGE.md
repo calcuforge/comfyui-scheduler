@@ -21,6 +21,16 @@ comfyui-cli node list
 comfyui-cli node remove NAME_OR_URL
 ```
 
+### Clear all nodes
+```bash
+comfyui-cli node clear
+```
+
+### Clear all workflows (local db)
+```bash
+comfyui-cli workflow clear
+```
+
 ### Check node status
 ```bash
 comfyui-cli status [--url URL]

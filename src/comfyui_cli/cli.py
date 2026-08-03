@@ -460,6 +460,19 @@ def workflow_import_all() -> None:
     )
 
 
+@workflow.command("clear")
+def workflow_clear() -> None:
+    """Remove all workflows from the local database."""
+    project_root = workflow_db.find_project_root(Path.cwd())
+    db_path = workflow_db.ensure_db(project_root)
+    conn = workflow_db.get_connection(db_path)
+    count = conn.execute("SELECT COUNT(*) FROM workflow").fetchone()[0]
+    conn.execute("DELETE FROM workflow")
+    conn.commit()
+    conn.close()
+    output.ok(f"Removed {count} workflow(s)", {"removed": count})
+
+
 @workflow.command("doc")
 def workflow_doc() -> None:
     """Generate doc/workflow.md from the workflow table."""

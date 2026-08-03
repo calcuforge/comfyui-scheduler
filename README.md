@@ -190,6 +190,14 @@ YAML format:
   blocking: true
 ```
 
+### `node clear`
+
+Remove **all** registered nodes from the local node database (use with care — re-import via `node import` to restore defaults).
+
+```bash
+comfyui-scheduler node clear
+```
+
 ---
 
 ## Workflow Import
@@ -211,6 +219,14 @@ Batch-import all workflows from `data/default_workflows/` and `data/workflows/`.
 
 ```bash
 comfyui-scheduler workflow import-all
+```
+
+### `workflow clear`
+
+Remove **all** workflows from the local database (`db/workflows.db`). The next `run` (or `workflow import-all`) re-imports the defaults automatically.
+
+```bash
+comfyui-scheduler workflow clear
 ```
 
 ### Meta YAML Format
