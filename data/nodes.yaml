@@ -9,3 +9,8 @@
 #     user: ""
 #     password: ""
 #     blocking: true
+- id: node1
+  url: "${BACKEND_PROXY_ENDPOINT}"
+  user: ""
+  password: ""
+  blocking: false
