@@ -108,7 +108,6 @@ def select_node(task_id: str = "") -> ComfyUIApi:
 
         output.debug("[scheduler] all nodes busy (blocking=true), waiting for an idle node...")
         time.sleep(5)
-        time.sleep(5)
 
 
 def to_api(node: dict[str, Any], task_id: str = "") -> ComfyUIApi:
