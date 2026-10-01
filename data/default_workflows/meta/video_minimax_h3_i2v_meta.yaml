@@ -1,0 +1,51 @@
+id: minimax_h3_i2v
+status: enabled
+api_json_file: data/default_workflows/workflow/video_minimax_h3_i2v.json
+type: image-to-video
+purpose: image-to-video requests with MiniMax H3 (video + audio)
+output_type: video
+command_example: |
+  comfyui-scheduler run -w minimax_h3_i2v -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing on a rooftop, camera slowly pushes in", "duration": 5, "fps": 24, "width": 1344, "height": 768}'
+input_node_mapping:
+  seed:
+    description: Random seed
+    node_input_field: "noise_seed"
+    node_meta_title: "随机噪波"
+    value_type: int
+    required: false
+  prompt:
+    description: 'Image-to-Video prompt (describe shots and audio, e.g. "Audio: deep room tone, mechanical clicks")'
+    node_input_field: "prompt"
+    node_meta_title: "MiniMax H3 图像转视频"
+    value_type: string
+    required: true
+  width:
+    description: Pixel width of the generated video
+    node_input_field: "width"
+    node_meta_title: "MiniMax H3 图像转视频"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated video
+    node_input_field: "height"
+    node_meta_title: "MiniMax H3 图像转视频"
+    value_type: int
+    required: true
+  duration:
+    description: Video duration in seconds (frame count is rounded up to the model's valid length grid)
+    node_input_field: "value"
+    node_meta_title: "Float (duration)"
+    value_type: float
+    required: false
+  fps:
+    description: frame rate
+    node_input_field: "fps"
+    node_meta_title: "创建视频"
+    value_type: int
+    required: false
+  image_file:
+    description: The reference image for the first frame of the video
+    node_input_field: "image"
+    node_meta_title: "加载图像"
+    value_type: file
+    required: true

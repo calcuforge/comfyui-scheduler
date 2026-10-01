@@ -6,16 +6,17 @@
 |----|------|---------|--------|
 | index_tts_2 | text_to_speech | text-to-speech requests | audio |
 | ltx2.3_flf2v_int8 | first-last-frame-to-video | first-last-frame-to-video requests | video |
-| ltx2.3_i2v_int8 | image-to-video | image-to-video requests | video |
 | ltx2.3_t2v_int8 | text-to-video | text-to-video requests | video |
+| minimax_h3_i2v | image-to-video | image-to-video requests with MiniMax H3 (video + audio) | video |
 | nvidia_rtx_image_upscale | image-upscale | image upscale requests | image |
 | nvidia_rtx_video_upscale | video-upscale | video upscale requests | video |
 | qwen3_asr | speech_to_text | Automatic speech recognition — transcribe audio to text with Qwen3-ASR | text |
 | qwen3_tts_voice_design | text_to_speech | Character voice design based on text-to-speech | audio |
-| qwen_image_edit_2511_int8_step4 | image-to-image | image-to-image requests | image |
+| qwen_image_2_1_edit_double_image | image-to-image | image editing with two reference images (Qwen-Image 2.1) | image |
+| qwen_image_2_1_edit_single_image | image-to-image | image editing with a single reference image (Qwen-Image 2.1) | image |
+| qwen_image_2_1_t2i | text_to_image | text-to-image requests with Qwen-Image 2.1 | image |
 | stable_audio_3_medium | text_to_music | Text-to-music generation with Stable Audio 3 (Music / Instrument / SFX / One-shot) | audio |
 | wan2.2_svi2pro_vbvr_int8 | image-to-video | image-to-video requests | video |
-| z_image_fp16 | text_to_image | text-to-image requests | image |
 
 ## Input Fields
 
@@ -44,19 +45,6 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `negative_prompt` | string | no | First-Last-Frame-to-Video negative prompt |
 | `seed` | int | no | Random seed |
 
-### ltx2.3_i2v_int8
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `fps` | float | yes | frame rate |
-| `height` | int | yes | Pixel height of the generated video |
-| `image_file` | file | yes | The reference image for the first frame of the video |
-| `prompt` | string | yes | Image-to-Video prompt |
-| `total_frame` | int | yes | Total number of frames for the generated video |
-| `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Image-to-Video negative prompt |
-| `seed` | int | no | Random seed |
-
 ### ltx2.3_t2v_int8
 
 | Field | Type | Required | Description |
@@ -68,6 +56,22 @@ comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world this is a test
 | `width` | int | yes | Pixel width of the generated video |
 | `negative_prompt` | string | no | Text-to-Video negative prompt |
 | `seed` | int | no | Random seed |
+
+### minimax_h3_i2v
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `height` | int | yes | Pixel height of the generated video |
+| `image_file` | file | yes | The reference image for the first frame of the video |
+| `prompt` | string | yes | Image-to-Video prompt (describe shots and audio, e.g. "Audio: deep room tone, mechanical clicks") |
+| `width` | int | yes | Pixel width of the generated video |
+| `duration` | float | no | Video duration in seconds (frame count is rounded up to the model's valid length grid) |
+| `fps` | int | no | frame rate |
+| `seed` | int | no | Random seed |
+
+```bash
+comfyui-scheduler run -w minimax_h3_i2v -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing on a rooftop, camera slowly pushes in", "duration": 5, "fps": 24, "width": 1344, "height": 768}'
+```
 
 ### nvidia_rtx_image_upscale
 
@@ -113,19 +117,45 @@ comfyui-scheduler run -w qwen3_asr -i '{"audio_file": "C:/Users/anson/Downloads/
 comfyui-scheduler run -w qwen3_tts_voice_design -i '{"voice_instruct": "Ancient old male, late 70s, bass-baritone range, labored breath support", "content": "Look at these hands."}'
 ```
 
-### qwen_image_edit_2511_int8_step4
+### qwen_image_2_1_edit_double_image
 
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
-| `height` | int | yes | Pixel height of the generated image |
-| `image_file` | file | yes | The reference image |
-| `prompt` | string | yes | Image-to-Image prompt |
-| `width` | int | yes | Pixel width of the generated image |
+| `image_file_1` | file | yes | First reference image (image1 — the canvas whose composition is preserved) |
+| `image_file_2` | file | yes | Second reference image (image2 — supplies the material to transfer) |
+| `prompt` | string | yes | Edit instruction referencing <image1> / <image2> (rewritten by the graph's built-in prompt enhancer) |
 | `negative_prompt` | string | no | Image-to-Image negative prompt |
 | `seed` | int | no | Random seed |
 
 ```bash
-comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_2_1_edit_double_image -i '{"image_file_1": "C:/Users/anson/Downloads/model.png", "image_file_2": "C:/Users/anson/Downloads/shirt.png", "prompt": "replace the outfit of the person in <image1> with the shirt from <image2>"}'
+```
+
+### qwen_image_2_1_edit_single_image
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `image_file` | file | yes | The source image to edit |
+| `prompt` | string | yes | Edit instruction (rewritten by the graph's built-in prompt enhancer) |
+| `negative_prompt` | string | no | Image-to-Image negative prompt |
+| `seed` | int | no | Random seed |
+
+```bash
+comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style"}'
+```
+
+### qwen_image_2_1_t2i
+
+| Field | Type | Required | Description |
+|-------|------|----------|-------------|
+| `height` | int | yes | Pixel height of the generated image |
+| `prompt` | string | yes | Text-to-Image prompt (used as-is; the graph's prompt rewriter is switched off by default) |
+| `width` | int | yes | Pixel width of the generated image |
+| `negative_prompt` | string | no | Text-to-Image negative prompt |
+| `seed` | int | no | Random seed |
+
+```bash
+comfyui-scheduler run -w qwen_image_2_1_t2i -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 1024}'
 ```
 
 ### stable_audio_3_medium
@@ -158,20 +188,6 @@ comfyui-scheduler run -w stable_audio_3_medium -i '{"prompt": "游戏BGM，BOSS�
 comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
 ```
 
-### z_image_fp16
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `height` | int | yes | Pixel height of the generated image |
-| `prompt` | string | yes | Text-to-Image prompt |
-| `width` | int | yes | Pixel width of the generated image |
-| `negative_prompt` | string | no | Text-to-Image negative prompt |
-| `seed` | int | no | Random seed |
-
-```bash
-comfyui-scheduler run -w z_image_fp16 -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 768}'
-```
-
 
 ## Run Output
 
@@ -192,7 +208,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
   "status": "ok",
   "msg": "Workflow completed — 1 file(s)",
   "data": {
-    "workflow_id": "z_image_fp16",
+    "workflow_id": "qwen_image_2_1_t2i",
     "prompt_id": "a1b2c3d4-...",
     "output_type": "image",
     "files": [
@@ -249,10 +265,10 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 ```json
 {
   "status": "ok",
-  "msg": "Imported 6, skipped 1",
+  "msg": "Imported 2, skipped 0",
   "data": {
-    "imported": ["index_tts_2", "z_image_fp16"],
-    "skipped": ["ltx2.3_i2v_int8"]
+    "imported": ["index_tts_2", "qwen_image_2_1_t2i"],
+    "skipped": []
   }
 }
 ```

@@ -1,0 +1,39 @@
+id: qwen_image_2_1_t2i
+status: enabled
+api_json_file: data/default_workflows/workflow/image_qwen_image_2_1_t2i.json
+type: text_to_image
+purpose: text-to-image requests with Qwen-Image 2.1
+output_type: image
+command_example: |
+  comfyui-scheduler run -w qwen_image_2_1_t2i -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 1024}'
+input_node_mapping:
+  prompt:
+    description: Text-to-Image prompt (used as-is; the graph's prompt rewriter is switched off by default)
+    node_input_field: "on_false"
+    node_meta_title: "Prompt (Switch)"
+    value_type: string
+    required: true
+  negative_prompt:
+    description: Text-to-Image negative prompt
+    node_input_field: "negative_prompt"
+    node_meta_title: "Text Encode Qwen Image 2.1"
+    value_type: string
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "K采样器"
+    value_type: int
+    required: false
+  width:
+    description: Pixel width of the generated image
+    node_input_field: "width"
+    node_meta_title: "空Latent图像"
+    value_type: int
+    required: true
+  height:
+    description: Pixel height of the generated image
+    node_input_field: "height"
+    node_meta_title: "空Latent图像"
+    value_type: int
+    required: true

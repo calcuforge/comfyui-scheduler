@@ -1,0 +1,33 @@
+id: qwen_image_2_1_edit_single_image
+status: enabled
+api_json_file: data/default_workflows/workflow/image_qwen_image_2_1_image_edit_single_image.json
+type: image-to-image
+purpose: image editing with a single reference image (Qwen-Image 2.1)
+output_type: image
+command_example: |
+  comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "C:/Users/anson/Downloads/desert.png", "prompt": "make it anime style"}'
+input_node_mapping:
+  image_file:
+    description: The source image to edit
+    node_input_field: "image"
+    node_meta_title: "加载图像"
+    value_type: file
+    required: true
+  prompt:
+    description: Edit instruction (rewritten by the graph's built-in prompt enhancer)
+    node_input_field: "prompt"
+    node_meta_title: "TextGenerate"
+    value_type: string
+    required: true
+  negative_prompt:
+    description: Image-to-Image negative prompt
+    node_input_field: "negative_prompt"
+    node_meta_title: "Text Encode Qwen Image 2.1"
+    value_type: string
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "K采样器"
+    value_type: int
+    required: false

@@ -18,7 +18,7 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
   "status": "ok",
   "msg": "Workflow completed — 1 file(s)",
   "data": {
-    "workflow_id": "z_image_fp16",
+    "workflow_id": "qwen_image_2_1_t2i",
     "prompt_id": "a1b2c3d4-...",
     "output_type": "image",
     "files": [
@@ -75,10 +75,10 @@ Use `--debug` to print progress information to stderr (uploads, scheduler decisi
 ```json
 {
   "status": "ok",
-  "msg": "Imported 6, skipped 1",
+  "msg": "Imported 2, skipped 0",
   "data": {
-    "imported": ["index_tts_2", "z_image_fp16"],
-    "skipped": ["ltx2.3_i2v_int8"]
+    "imported": ["index_tts_2", "qwen_image_2_1_t2i"],
+    "skipped": []
   }
 }
 ```

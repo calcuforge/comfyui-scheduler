@@ -1,0 +1,39 @@
+id: qwen_image_2_1_edit_double_image
+status: enabled
+api_json_file: data/default_workflows/workflow/image_qwen_image_2_1_image_edit_double_image.json
+type: image-to-image
+purpose: image editing with two reference images (Qwen-Image 2.1)
+output_type: image
+command_example: |
+  comfyui-scheduler run -w qwen_image_2_1_edit_double_image -i '{"image_file_1": "C:/Users/anson/Downloads/model.png", "image_file_2": "C:/Users/anson/Downloads/shirt.png", "prompt": "replace the outfit of the person in <image1> with the shirt from <image2>"}'
+input_node_mapping:
+  image_file_1:
+    description: First reference image (image1 — the canvas whose composition is preserved)
+    node_input_field: "image"
+    node_meta_title: "加载图像 1"
+    value_type: file
+    required: true
+  image_file_2:
+    description: Second reference image (image2 — supplies the material to transfer)
+    node_input_field: "image"
+    node_meta_title: "加载图像 2"
+    value_type: file
+    required: true
+  prompt:
+    description: "Edit instruction referencing <image1> / <image2> (rewritten by the graph's built-in prompt enhancer)"
+    node_input_field: "prompt"
+    node_meta_title: "TextGenerate"
+    value_type: string
+    required: true
+  negative_prompt:
+    description: Image-to-Image negative prompt
+    node_input_field: "negative_prompt"
+    node_meta_title: "Text Encode Qwen Image 2.1"
+    value_type: string
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "K采样器"
+    value_type: int
+    required: false

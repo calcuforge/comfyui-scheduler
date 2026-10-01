@@ -25,7 +25,7 @@ comfyui-scheduler node add --id node1 --url http://127.0.0.1:8188
 comfyui-scheduler workflow import-all
 
 # 3. Run a workflow by ID with simplified inputs
-comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./photo.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "./photo.png", "prompt": "make it anime style"}'
 
 # 4. Run a workflow from a JSON file with explicit inputs
 comfyui-scheduler run -f ./my_workflow.json -i '[{"type":"file","value":"./photo.png","node_title":"Load Image","node_field":"image"}]'
@@ -54,10 +54,16 @@ comfyui-scheduler run -w <workflow-id> -i '{"<field>": <value>, ...}'
 comfyui-scheduler run -w index_tts_2 -i '{"content": "hello world", "voice_file": "./reference.mp3"}'
 
 # Image-to-image
-comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "./input.png", "prompt": "make it anime style"}'
+
+# Image-to-image with two reference images
+comfyui-scheduler run -w qwen_image_2_1_edit_double_image -i '{"image_file_1": "./model.png", "image_file_2": "./shirt.png", "prompt": "replace the outfit of the person in <image1> with the shirt from <image2>"}'
 
 # Image-to-video with multi-scene prompt
 comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "./001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
+
+# Image-to-video with MiniMax H3 (video + audio)
+comfyui-scheduler run -w minimax_h3_i2v -i '{"image_file": "./001.jpg", "prompt": "a girl dancing on a rooftop", "duration": 5, "fps": 24, "width": 1344, "height": 768}'
 ```
 
 Input values are automatically typed based on the workflow's `input_node_mapping`: strings and numbers are set directly on workflow nodes, while `file`-typed fields are uploaded to the server first.
@@ -116,7 +122,7 @@ On success the tool prints a JSON result with output file URLs:
 {
   "status": "ok",
   "data": {
-    "workflow_id": "qwen_image_edit_2511_int8_step4",
+    "workflow_id": "qwen_image_2_1_edit_single_image",
     "task_id": "a1b2c3d4-...",
     "prompt_id": "e5f6g7h8-...",
     "output_type": "image",
@@ -209,7 +215,7 @@ Workflows are stored in a local SQLite database (`db/workflows.db`) and referenc
 Import a single workflow from a meta YAML file or workflow JSON file.
 
 ```bash
-comfyui-scheduler workflow import data/default_workflows/meta/qwen_image_edit_2511_int8_step4.yaml
+comfyui-scheduler workflow import data/default_workflows/meta/image_qwen_image_2_1_t2i_meta.yaml
 comfyui-scheduler workflow import data/default_workflows/workflow/index_tts_2.json
 ```
 
@@ -234,39 +240,39 @@ comfyui-scheduler workflow clear
 Each workflow can have a meta YAML file that defines its ID, input mapping, and command examples:
 
 ```yaml
-id: qwen_image_edit_2511_int8_step4
+id: qwen_image_2_1_edit_single_image
 status: enabled
-api_json_file: data/default_workflows/workflow/qwen_image_edit_2511_int8_step4.json
+api_json_file: data/default_workflows/workflow/image_qwen_image_2_1_image_edit_single_image.json
 type: image-to-image
-purpose: image-to-image requests
+purpose: image editing with a single reference image (Qwen-Image 2.1)
 output_type: image
 command_example: |
-  comfyui-scheduler run -w qwen_image_edit_2511_int8_step4 -i '{"image_file": "./input.png", "prompt": "make it anime style", "width": 1024, "height": 1024}'
+  comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "./input.png", "prompt": "make it anime style"}'
 input_node_mapping:
   image_file:
-    description: The reference image
+    description: The source image to edit
     node_input_field: "image"
-    node_meta_title: "LoadImage"
+    node_meta_title: "加载图像"
     value_type: file
     required: true
   prompt:
-    description: Image-to-Image prompt
+    description: Edit instruction (rewritten by the graph's built-in prompt enhancer)
     node_input_field: "prompt"
-    node_meta_title: "TextEncodeQwenImageEditPlus (Positive)"
+    node_meta_title: "TextGenerate"
     value_type: string
     required: true
-  width:
-    description: Pixel width of the generated image
-    node_input_field: "width"
-    node_meta_title: "Empty Latent"
+  negative_prompt:
+    description: Image-to-Image negative prompt
+    node_input_field: "negative_prompt"
+    node_meta_title: "Text Encode Qwen Image 2.1"
+    value_type: string
+    required: false
+  seed:
+    description: Random seed
+    node_input_field: "seed"
+    node_meta_title: "K采样器"
     value_type: int
-    required: true
-  height:
-    description: Pixel height of the generated image
-    node_input_field: "height"
-    node_meta_title: "Empty Latent"
-    value_type: int
-    required: true
+    required: false
 ```
 
 ---
