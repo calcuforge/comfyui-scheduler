@@ -123,7 +123,7 @@ comfyui-scheduler run -w qwen3_tts_voice_design -i '{"voice_instruct": "Ancient 
 |-------|------|----------|-------------|
 | `image_file_1` | file | yes | First reference image (image1 — the canvas whose composition is preserved) |
 | `image_file_2` | file | yes | Second reference image (image2 — supplies the material to transfer) |
-| `prompt` | string | yes | Edit instruction referencing <image1> / <image2> (rewritten by the graph's built-in prompt enhancer) |
+| `prompt` | string | yes | Edit instruction referencing <image1> / <image2> (rewritten by the built-in prompt enhancer). To generate a transparent-background image, include: "This is an RGBA image with transparency.The image has alpha channel and the background is transparent." |
 | `negative_prompt` | string | no | Image-to-Image negative prompt |
 | `seed` | int | no | Random seed |
 
@@ -136,7 +136,7 @@ comfyui-scheduler run -w qwen_image_2_1_edit_double_image -i '{"image_file_1": "
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `image_file` | file | yes | The source image to edit |
-| `prompt` | string | yes | Edit instruction (rewritten by the graph's built-in prompt enhancer) |
+| `prompt` | string | yes | Edit instruction (rewritten by the built-in prompt enhancer). To generate a transparent-background image, include: "This is an RGBA image with transparency.The image has alpha channel and the background is transparent." |
 | `negative_prompt` | string | no | Image-to-Image negative prompt |
 | `seed` | int | no | Random seed |
 
@@ -149,7 +149,7 @@ comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "C:
 | Field | Type | Required | Description |
 |-------|------|----------|-------------|
 | `height` | int | yes | Pixel height of the generated image |
-| `prompt` | string | yes | Text-to-Image prompt (used as-is; the graph's prompt rewriter is switched off by default) |
+| `prompt` | string | yes | Text-to-Image prompt (used as-is; the built-in prompt rewriter is off by default). To generate a transparent-background image, include: "This is an RGBA image with transparency.The image has alpha channel and the background is transparent." |
 | `width` | int | yes | Pixel width of the generated image |
 | `negative_prompt` | string | no | Text-to-Image negative prompt |
 | `seed` | int | no | Random seed |

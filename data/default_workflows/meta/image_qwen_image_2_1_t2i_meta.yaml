@@ -8,7 +8,7 @@ command_example: |
   comfyui-scheduler run -w qwen_image_2_1_t2i -i '{"prompt": "a cat sitting on a cloud", "width": 1024, "height": 1024}'
 input_node_mapping:
   prompt:
-    description: Text-to-Image prompt (used as-is; the graph's prompt rewriter is switched off by default)
+    description: 'Text-to-Image prompt (used as-is; the built-in prompt rewriter is off by default). To generate a transparent-background image, include: "This is an RGBA image with transparency.The image has alpha channel and the background is transparent."'
     node_input_field: "on_false"
     node_meta_title: "Prompt (Switch)"
     value_type: string

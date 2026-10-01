@@ -20,7 +20,7 @@ input_node_mapping:
     value_type: file
     required: true
   prompt:
-    description: "Edit instruction referencing <image1> / <image2> (rewritten by the graph's built-in prompt enhancer)"
+    description: 'Edit instruction referencing <image1> / <image2> (rewritten by the built-in prompt enhancer). To generate a transparent-background image, include: "This is an RGBA image with transparency.The image has alpha channel and the background is transparent."'
     node_input_field: "prompt"
     node_meta_title: "TextGenerate"
     value_type: string
