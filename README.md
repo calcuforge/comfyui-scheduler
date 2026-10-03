@@ -59,9 +59,6 @@ comfyui-scheduler run -w qwen_image_2_1_edit_single_image -i '{"image_file": "./
 # Image-to-image with two reference images
 comfyui-scheduler run -w qwen_image_2_1_edit_double_image -i '{"image_file_1": "./model.png", "image_file_2": "./shirt.png", "prompt": "replace the outfit of the person in <image1> with the shirt from <image2>"}'
 
-# Image-to-video with multi-scene prompt
-comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "./001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
-
 # Image-to-video with MiniMax H3 (video + audio)
 comfyui-scheduler run -w minimax_h3_i2v -i '{"image_file": "./001.jpg", "prompt": "a girl dancing on a rooftop", "duration": 5, "fps": 24, "width": 1344, "height": 768}'
 ```

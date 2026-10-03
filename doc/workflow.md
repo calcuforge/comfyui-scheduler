@@ -16,7 +16,6 @@
 | qwen_image_2_1_edit_single_image | image-to-image | image editing with a single reference image (Qwen-Image 2.1) | image |
 | qwen_image_2_1_t2i | text_to_image | text-to-image requests with Qwen-Image 2.1 | image |
 | stable_audio_3_medium | text_to_music | Text-to-music generation with Stable Audio 3 (Music / Instrument / SFX / One-shot) | audio |
-| wan2.2_svi2pro_vbvr_int8 | image-to-video | image-to-video requests | video |
 
 ## Input Fields
 
@@ -170,22 +169,6 @@ comfyui-scheduler run -w qwen_image_2_1_t2i -i '{"prompt": "a cat sitting on a c
 
 ```bash
 comfyui-scheduler run -w stable_audio_3_medium -i '{"prompt": "游戏BGM，BOSS战，热血激情，打击乐为主", "duration": 180}'
-```
-
-### wan2.2_svi2pro_vbvr_int8
-
-| Field | Type | Required | Description |
-|-------|------|----------|-------------|
-| `fps` | int | yes | frame rate |
-| `height` | int | yes | Pixel height of the generated video |
-| `image_file` | file | yes | The reference image for the first frame of the video |
-| `prompt` | string | yes | Image-to-Video prompt,format:prompt1\|second prompt1\|second ... |
-| `width` | int | yes | Pixel width of the generated video |
-| `negative_prompt` | string | no | Image-to-Video negative prompt |
-| `seed` | int | no | Random seed |
-
-```bash
-comfyui-scheduler run -w wan2.2_svi2pro_vbvr_int8 -i '{"image_file": "C:/Users/anson/Downloads/001.jpg", "prompt": "a girl dancing|5\na girl laughing|5", "width": 640, "height": 384, "fps": 16}'
 ```
 
 
